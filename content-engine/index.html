@@ -329,7 +329,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   const PERSONA_SHORT = { flex: 'Test slot' };
   const HANDLE = 'overture';
 
-  const state = { view: 'ideas', hooks: [], posts: [], cat: 'All', status: 'all', q: '', adding: false, canWrite: true, busy: {} };
+  const state = { view: 'ideas', hooks: [], posts: [], cat: 'All', status: 'all', platform: 'all', q: '', adding: false, canWrite: true, busy: {} };
   let db = null, comments = null;
 
   // Postiz TikTok channels an approved post can go to (one Approve 2 button each)
@@ -349,7 +349,10 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     } catch (e) { return false; }
   }
 
-  try { const v = localStorage.getItem('oce-view'); if (v) state.view = v; } catch (e) {}
+  try { const v = localStorage.getItem('oce-view'); if (v) state.view = v; const pf = localStorage.getItem('oce-platform'); if (pf) state.platform = pf; } catch (e) {}
+  // Where a hook was found: its platform field, else read from the post link
+  const PLATFORMS = ['TikTok', 'Instagram', 'Other'];
+  const platOf = h => h.platform || (/tiktok\.com/.test(h.postUrl || '') ? 'TikTok' : /instagram\.com/.test(h.postUrl || '') ? 'Instagram' : 'Other');
   if (/^#(hooks|ideas|review|scheduled|posted)$/.test(location.hash)) state.view = location.hash.slice(1);
 
   const $ = s => document.querySelector(s);
@@ -392,6 +395,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const q = state.q.trim().toLowerCase();
     return state.hooks
       .filter(h => state.cat === 'All' || h.category === state.cat)
+      .filter(h => state.platform === 'all' || platOf(h) === state.platform)
       .filter(h => state.status === 'all' || h.status === state.status)
       .filter(h => !q || [h.text, h.sourceHook, h.evidence, h.note, h.id, h.ref].some(x => String(x || '').toLowerCase().includes(q)))
       .sort((a, b) => (STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status)) || ((a.order ?? 1e9) - (b.order ?? 1e9)));
@@ -399,11 +403,17 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 
   function renderHooks() {
     const cats = [...new Set([...CATS, ...state.hooks.map(h => h.category).filter(Boolean)])];
-    const n = c => state.hooks.filter(h => c === 'All' || h.category === c).length;
+    const n = c => state.hooks.filter(h => (c === 'All' || h.category === c) && (state.platform === 'all' || platOf(h) === state.platform)).length;
+    const plats = [...new Set(state.hooks.map(platOf))].sort((a, b) => PLATFORMS.indexOf(a) - PLATFORMS.indexOf(b));
+    const np = p => state.hooks.filter(h => p === 'all' || platOf(h) === p).length;
     const list = filteredHooks();
     return `
       <div class="toolbar">
         <input class="search" id="hook-q" type="search" placeholder="Search hooks, sources, evidence…" value="${esc(state.q)}" aria-label="Search hooks">
+        <select class="status-filter" id="hook-platform" aria-label="Filter by platform">
+          <option value="all">All platforms (${np('all')})</option>
+          ${plats.map(p => `<option value="${esc(p)}" ${state.platform === p ? 'selected' : ''}>${esc(p)} (${np(p)})</option>`).join('')}
+        </select>
         <select class="status-filter" id="hook-status" aria-label="Filter by status">
           <option value="all">All statuses</option>
           ${STATUSES.map(s => `<option value="${s}" ${state.status === s ? 'selected' : ''}>${s}</option>`).join('')}
@@ -432,7 +442,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     return `<article class="hook" id="hook-${esc(h.id)}">
       ${shot}
       ${pair}
-      <div class="side"><span class="pill ${esc(h.status)}">${esc(h.status)}</span><span class="cat">${esc(h.category)}</span><span class="ref-id">${esc(h.ref || h.id)}</span>${h.status === 'backlog' || h.offerIdeas ? addToIdeasBtn(h) : ''}</div>
+      <div class="side"><span class="pill ${esc(h.status)}">${esc(h.status)}</span><span class="cat">${esc(h.category)}</span><span class="ref-id">${esc(platOf(h))} · ${esc(h.ref || h.id)}</span>${h.status === 'backlog' || h.offerIdeas ? addToIdeasBtn(h) : ''}</div>
       ${based ? `<div class="adapted">Based on: <i>${esc(based.text)}</i></div>` : ''}
       ${compareBlock(h)}
       ${h.evidence ? `<div class="evidence">${esc(h.evidence)}</div>` : ''}
@@ -779,6 +789,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   view.addEventListener('change', async e => {
     const t = e.target;
     if (t.id === 'hook-status') { state.status = t.value; render(); }
+    if (t.id === 'hook-platform') { state.platform = t.value; try { localStorage.setItem('oce-platform', t.value); } catch (e) {} render(); }
     if (t.dataset.editCaption) await patchPost(t.dataset.editCaption, { caption: t.value });
     if (t.dataset.editTitle) await patchPost(t.dataset.editTitle, { title: t.value.trim() });
     if (t.dataset.editWhen) await patchPost(t.dataset.editWhen, { scheduleAt: t.value });
@@ -794,7 +805,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     if (t.dataset.cat) { state.cat = t.dataset.cat; render(); }
     else if (t.id === 'hook-add') { state.adding = true; render(); $('#nh-text')?.focus(); }
     else if (t.id === 'add-cancel') { state.adding = false; render(); }
-    else if (t.dataset.gotoHook) { state.view = 'hooks'; state.cat = 'All'; state.status = 'all'; state.q = t.dataset.gotoHook; render(); }
+    else if (t.dataset.gotoHook) { state.view = 'hooks'; state.cat = 'All'; state.status = 'all'; state.platform = 'all'; state.q = t.dataset.gotoHook; render(); }
     else if (t.dataset.step) { const p = state.posts.find(x => x.id === t.dataset.step); slideIdx[p.id] = Math.max(0, Math.min(p.slides.length - 1, (slideIdx[p.id] || 0) + +t.dataset.dir)); render(); view.querySelector(`[data-step="${CSS.escape(p.id)}"][data-dir="${t.dataset.dir}"]`)?.focus(); }
     else if (t.dataset.copyText) { const p = state.posts.find(x => x.id === t.dataset.copyText); toast(await copyText(p.overlays[+t.dataset.i].text) ? `Slide ${+t.dataset.i + 1} text copied` : 'Could not copy: select the text and copy it by hand'); }
     else if (t.dataset.copyPin) { const p = state.posts.find(x => x.id === t.dataset.copyPin); toast(await copyText(p.pinterest.join('\n')) ? 'Pinterest search terms copied' : 'Could not copy: select the terms and copy them by hand'); }
