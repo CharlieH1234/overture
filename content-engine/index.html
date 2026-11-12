@@ -442,7 +442,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     return `<article class="hook" id="hook-${esc(h.id)}">
       ${shot}
       ${pair}
-      <div class="side"><span class="pill ${esc(h.status)}">${esc(h.status)}</span><span class="cat">${esc(h.category)}</span><span class="ref-id">${esc(platOf(h))} · ${esc(h.ref || h.id)}</span>${h.status === 'backlog' || h.offerIdeas ? addToIdeasBtn(h) : ''}</div>
+      <div class="side"><span class="pill ${esc(h.status)}">${esc(h.status)}</span><span class="cat">${esc(h.category)}</span><span class="ref-id">${esc(platOf(h))} · ${esc(h.ref || h.id)}</span>${addToIdeasBtn(h)}</div>
       ${based ? `<div class="adapted">Based on: <i>${esc(based.text)}</i></div>` : ''}
       ${compareBlock(h)}
       ${h.evidence ? `<div class="evidence">${esc(h.evidence)}</div>` : ''}
@@ -456,7 +456,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   function addToIdeasBtn(h) {
     const p = state.posts.find(x => x.hookId === h.id && x.stage !== 'posted');
     if (p) return `<span class="k" style="font-size:12px">In ${esc(p.stage === 'idea' ? 'Ideas' : p.stage)} as ${esc(p.ref || p.id)}</span>`;
-    return `<button class="btn primary" type="button" data-add-idea="${esc(h.id)}" ${state.canWrite && !state.busy[h.id] ? '' : 'disabled'}>Add to Ideas</button>`;
+    return `<button class="btn primary" type="button" data-add-idea="${esc(h.id)}" ${state.canWrite && !state.busy[h.id] ? '' : 'disabled'} title="Adds this hook to Ideas in the next free slot and asks Claude to rewrite it for Overture">Add: Ideas</button>`;
   }
   function nextFreeSlot() {
     const taken = new Set(state.posts.map(p => p.id));
@@ -467,16 +467,20 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     }
     return null;
   }
-  async function addHookToIdeas(hookId) {
+  // Add: Ideas = new idea post from the hook + a queued "Reimagine hook" for Claude (rewrite it for Overture)
+  async function addHookToIdeas(hookId, el) {
     const h = hookById(hookId); const slot = nextFreeSlot(); if (!h || !slot || !db) return;
-    state.busy[hookId] = true; render();
     const num = state.posts.reduce((m, p) => Math.max(m, p.num || 0), 0) + 1;
     const ref = 'P-' + String(num).padStart(3, '0');
+    // Ping inside the click gesture, before anything re-renders the button it is anchored to
+    const pinged = el ? pingClaude(el, `Overture engine request: reimagine hook ${h.ref || h.id} for Overture as new idea ${ref} (post ${slot.id}). Follow the Overture processing-runbook.md (Reimagine hook).`) : Promise.resolve(false);
+    state.busy[hookId] = true; if (el) el.disabled = true;
     try {
       await db.doc('posts/' + slot.id).set({ id: slot.id, date: slot.date, day: slot.day, time: slot.time, num, ref, hookId: h.id, newHook: null,
         persona: CAT_PERSONA[h.category] || h.category, cover: h.text, subject: '', notes: [h.evidence, h.note].filter(Boolean).join(' · '),
-        stage: 'idea', blocker: 'Slides not built yet', caption: '', title: '', slides: [], postizMedia: [], pinterest: [], createdAt: new Date().toISOString() });
-      toast(`${ref} added to Ideas for ${fmtDay(slot.date)} ${slot.time}`);
+        stage: 'idea', blocker: 'Slides not built yet', caption: '', title: '', slides: [], postizMedia: [], pinterest: [], createdAt: new Date().toISOString(),
+        reimagine: { hook: { status: 'queued', requestedAt: new Date().toISOString() } } });
+      toast((await pinged) ? `${ref} added to Ideas for ${fmtDay(slot.date)} ${slot.time}. Claude will rewrite the hook for Overture` : `${ref} added to Ideas. Claude was not notified automatically, so tell Claude "reimagine ${ref}"`);
     } catch (e) { toast('Could not add: ' + (e?.message || e?.code)); }
     finally { delete state.busy[hookId]; render(); }
   }
@@ -672,15 +676,15 @@ button.step:disabled { opacity: 0.35; cursor: default; }
       <div class="actions">
         <button class="btn primary" type="button" data-approve1="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'}>Approve 1</button>
         <button class="btn danger${state.rejectArm === p.id ? ' armed' : ''}" type="button" data-reject="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'} title="Removes this post from the week plan. Its hook stays in the library.">${state.rejectArm === p.id ? 'Confirm reject' : 'Reject'}</button>
-        ${['slides', 'caption'].map(kind => {
+        ${['hook', 'slides', 'caption'].map(kind => {
           const r = p.reimagine?.[kind];
           const busy = r && (r.status === 'queued' || r.status === 'working');
-          return `<button class="btn" type="button" data-reimagine="${kind}" data-id="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Reimagining…' : kind === 'slides' ? 'Reimagine slides' : 'Reimagine caption'}</button>
+          return `<button class="btn" type="button" data-reimagine="${kind}" data-id="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Reimagining…' : kind === 'hook' ? 'Reimagine hook' : kind === 'slides' ? 'Reimagine slides' : 'Reimagine caption'}</button>
             ${r ? `<span class="rstate ${r.status === 'error' ? 'bad' : r.status === 'done' ? 'good' : ''}">${esc(
               r.status === 'queued' ? 'Waiting for Claude…'
               : r.status === 'working' ? (r.detail || 'Claude is working on it…')
               : r.status === 'error' ? (r.error || 'Failed')
-              : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}`;
+              : kind === 'hook' ? 'Overture hook ready' : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}`;
         }).join('')}
       </div>
     </article>`;
@@ -815,7 +819,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (t.dataset.tt) openTT(t.dataset.tt);
     else if (t.dataset.lb) openLightbox(t.dataset.lb, +t.dataset.i);
     else if (t.dataset.hlb) { const h = hookById(t.dataset.hlb); openLb([h.thumb], 0, 'Slide 1 of the original post: ' + h.text, () => `Original post · ${h.evidence || h.category}`); }
-    else if (t.dataset.addIdea) await addHookToIdeas(t.dataset.addIdea);
+    else if (t.dataset.addIdea) await addHookToIdeas(t.dataset.addIdea, t);
     else if (t.dataset.checkViews) {
       const p = state.posts.find(x => x.id === t.dataset.checkViews); const ch = chanOf(p);
       const pinged = pingClaude(t, `Overture engine request: check views of ${p.ref} (post ${p.id}) on the ${ch?.name || p.schedule?.channel || 'TikTok'} channel${ch?.handle ? ' (' + ch.handle + ')' : ''}. Follow the Overture processing-runbook.md (Check views).`);
@@ -833,10 +837,10 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (t.dataset.reimagine) {
       // Queued for Claude: slides get a new composition (same original look), captions a new angle or viewpoint
       const p = state.posts.find(x => x.id === t.dataset.id); const kind = t.dataset.reimagine;
-      const pinged = pingClaude(t, `Overture engine request: reimagine the ${kind} of ${p.ref} (post ${p.id}). Follow the Overture processing-runbook.md.${kind === 'caption' ? ' Keep any headline or title I edited (locked.cover / locked.title) exactly as saved.' : ''}`);
+      const pinged = pingClaude(t, `Overture engine request: reimagine the ${kind} of ${p.ref} (post ${p.id}). Follow the Overture processing-runbook.md.${kind === 'caption' ? ' Keep any headline or title I edited (locked.cover / locked.title) exactly as saved.' : kind === 'hook' ? ' If I edited the headline (locked.cover), keep it exactly as saved.' : ''}`);
       await patchPost(p.id, { reimagine: { ...(p.reimagine || {}), [kind]: { status: 'queued', requestedAt: new Date().toISOString() } } });
       if (!(await pinged)) toast('Queued. Claude was not notified automatically, so tell Claude "reimagine ' + p.ref + '"');
-      toast(kind === 'slides' ? 'Queued: Claude will reimagine the slides' : 'Queued: Claude will reimagine the caption');
+      toast(kind === 'slides' ? 'Queued: Claude will reimagine the slides' : kind === 'hook' ? 'Queued: Claude will rewrite the hook for Overture' : 'Queued: Claude will reimagine the caption');
     }
     else if (t.dataset.reject) {
       // Two clicks: the first arms the button, the second sends the post back to the hook library
