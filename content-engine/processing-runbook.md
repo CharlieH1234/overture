@@ -86,8 +86,14 @@ Status field: `posts/<id>.reimagine.caption`.
 
 - `title`: TikTok title, at most 90 characters.
 - `caption`: starts with the title line, then 2 to 4 short lines in Overture's
-  tone, a soft call to action ("Set your first alarm tonight." or similar), then
-  3 to 5 relevant hashtags. Under 2,200 characters.
+  tone, then the tagline, then the hashtags. Under 2,200 characters.
+  - **Never mention Overture** (or "the app", "this alarm app", features, the
+    trial or how it works). The caption is about the feeling, the mood of the
+    piece, and the result: how the morning feels when you wake to it.
+  - **End with the tagline on its own line:** "Mornings deserve better than a beep."
+  - **Hashtags, in this order:** `#classicalmusic #alarm #wakeup #<composer>`,
+    where the last is the featured composer's surname in lowercase
+    (`#grieg`, `#mozart`, `#debussy`, `#bach`, `#satie`). Only those four.
 - Keep `cover` and `title` exactly as saved when `locked.cover` / `locked.title`
   is true.
 - For "Reimagine caption", take a different angle from the current caption.
