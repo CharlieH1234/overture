@@ -171,10 +171,10 @@ with a plain `schedule.error` and stop.
    Artifact tool), then run
    `python3 -I content-engine/scripts/telegram_compress.py <folder>`.
    It sends each photo to the Memory Palace bot chat and downloads Telegram's
-   re-encoded copy as `slide<N>_tg.jpg`. It needs `TELEGRAM_BOT_TOKEN` and
-   `TELEGRAM_CHAT_ID` set in the environment (the operator adds them in the
-   cloud environment's settings; same values as Memory Palace) and
-   `api.telegram.org` allowed. If either variable is missing, or Telegram can't
+   re-encoded copy as `slide<N>_tg.jpg`. It reads the bot token from the
+   environment variable `Memorypalace_slides_bot` (the Memory Palace slides
+   bot) and the chat from `TELEGRAM_CHAT_ID`, both set in the cloud
+   environment's settings, and needs `api.telegram.org` allowed (it is). If either variable is missing, or Telegram can't
    be reached, set `error` to "Telegram step can't run: <reason>" and don't
    upload. Never substitute local compression.
 2. **download**: check every `slide<N>_tg.jpg` exists and opens.

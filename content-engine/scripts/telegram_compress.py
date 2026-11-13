@@ -10,9 +10,10 @@ bot chat as a photo, then downloads Telegram's re-encoded JPEG as
 phone-style JPEG, the same step the Palace engine uses (tiktok-app-marketing
 skill, "Telegram Metadata Wipe"). Only the *_tg.jpg files go on to Postiz.
 
-Needs the environment variables TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (set in
-the cloud environment's settings by the operator, the same values as Memory
-Palace) and api.telegram.org reachable. The token is never printed.
+Needs the bot token in the environment variable Memorypalace_slides_bot (or
+TELEGRAM_BOT_TOKEN) and the chat in TELEGRAM_CHAT_ID, set in the cloud
+environment's settings by the operator (the same bot and chat as Memory
+Palace), and api.telegram.org reachable. The token is never printed.
 
 There is no local fallback: if Telegram can't be reached or a credential is
 missing, the script stops with an error, and nothing should be uploaded.
@@ -72,10 +73,11 @@ def main():
     if len(sys.argv) != 2:
         die('usage: telegram_compress.py <post_dir>')
     post_dir = sys.argv[1]
-    token = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
+    # The operator stores the bot token under the bot's name; TELEGRAM_BOT_TOKEN also works
+    token = (os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('Memorypalace_slides_bot') or '').strip()
     chat_id = os.environ.get('TELEGRAM_CHAT_ID', '').strip()
     if not token or not chat_id:
-        die('TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in the environment')
+        die('Set Memorypalace_slides_bot (or TELEGRAM_BOT_TOKEN) and TELEGRAM_CHAT_ID in the environment')
     slides = sorted((f for f in os.listdir(post_dir) if f.startswith('slide') and f.endswith('.jpg') and '_' not in f),
                     key=lambda f: int(f[5:-4]))
     if not slides:
