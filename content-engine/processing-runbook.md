@@ -155,9 +155,19 @@ still go through the Telegram metadata step (see Approve 2).
 
 ## Approve 2
 
-No Overture TikTok channel is configured (`CHANNELS` is empty in the page), so
-the button is disabled. If a request arrives anyway, set `schedule.status` to
-`error` with "No Overture channel is set up yet".
+Channel: **Overture.alarm.app** (Postiz TikTok, integration id
+`cmwf7nvfk014kms076xqd8f1m`). Approve 2 writes `schedule` on the post with that
+`integrationId`, the send time and `step: "queued"`.
+
+The upload route for Overture is not finished. Two pieces are missing:
+- The Telegram metadata step (from the tiktok-app-marketing skill) needs the bot
+  token and chat ID, and `api.telegram.org` reachable. Until the operator decides
+  whether Overture keeps this step and supplies them, don't upload.
+- Postiz uploads from a public URL, and the page's images are on a private
+  artifact, so a public copy is needed first.
+Until both are settled, set `schedule.status` to `error` with a plain reason
+(e.g. "Upload route not set up yet: Telegram step and public image copy") and
+tell the operator. Never post publicly: TikTok posts go as drafts to the inbox.
 
 ## Check views
 

@@ -327,14 +327,16 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   const STATUSES = ['proven', 'test-first', 'draft', 'backlog', 'flagged'];
   const PERSONA_CAT = {};
   const PERSONA_SHORT = { flex: 'Test slot' };
-  const HANDLE = 'overture';
+  const HANDLE = 'overture.alarm.app';
 
   const state = { view: 'ideas', hooks: [], posts: [], cat: 'All', status: 'all', platform: 'all', q: '', adding: false, canWrite: true, busy: {} };
   let db = null, comments = null;
 
   // Postiz TikTok channels an approved post can go to (one Approve 2 button each)
-  // None yet: add Overture's Postiz TikTok channels here as { key, name, id, handle }
-  const CHANNELS = [];
+  // Overture's Postiz TikTok channels (one Approve 2 button each)
+  const CHANNELS = [
+    { key: 'ova', name: 'Overture.alarm.app', id: 'cmwf7nvfk014kms076xqd8f1m', handle: '@overture.alarm.app' }
+  ];
   // Retired channels: no Approve 2 button, but older posts sent there still show their channel and handle
   const OLD_CHANNELS = [];
 
