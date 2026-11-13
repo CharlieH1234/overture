@@ -57,6 +57,7 @@ Triggered by **Add: Ideas** on a hook (which creates the idea post) or by
    - Keep the original's pattern and rhythm. Swap in Overture's world: waking
      to a classical piece, mornings without a beep, the radio playing on.
    - One hook, at most about 20 words, in the original's casing style.
+   - Never mention Overture (or "this app") in the hook.
    - No health or medical claims (dopamine, cortisol, anxiety cures, healing),
      even if the original made one. Borrow the format, not the claim.
    - No made-up stats, studies, reviews or ratings.
@@ -113,9 +114,10 @@ tell the operator; don't retry.
 2. Plan 3 slides (unless the operator asks for another number):
    - Slide 1: the hook (`cover`).
    - Slide 2: the turn or payoff that continues the joke or story.
-   - Slide 3: the Overture close, e.g. "mornings deserve better / than a beep",
-     then "Overture: the classical / music alarm". No "link in bio" claims we
-     can't back.
+   - Slide 3: the close, ending on the tagline "mornings deserve better /
+     than a beep". No "link in bio" claims we can't back.
+   - **Never mention Overture on any slide** (no app name, features or "this
+     app"). Slide text is about the feeling, the music and the morning.
    For "Reimagine slides" on a post that already has slides, change the
    composition (camera angle, moment, framing) and keep the same look.
 3. Write `prompts.json` for `content-engine/scripts/generate_slides.py`:
