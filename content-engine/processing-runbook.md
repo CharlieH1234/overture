@@ -162,15 +162,29 @@ Channel: **Overture.alarm.app** (Postiz TikTok, integration id
 `cmwf7nvfk014kms076xqd8f1m`). Approve 2 writes `schedule` on the post with that
 `integrationId`, the send time and `step: "queued"`.
 
-The upload route for Overture is not finished. Two pieces are missing:
-- The Telegram metadata step (from the tiktok-app-marketing skill) needs the bot
-  token and chat ID, and `api.telegram.org` reachable. Until the operator decides
-  whether Overture keeps this step and supplies them, don't upload.
-- Postiz uploads from a public URL, and the page's images are on a private
-  artifact, so a public copy is needed first.
-Until both are settled, set `schedule.status` to `error` with a plain reason
-(e.g. "Upload route not set up yet: Telegram step and public image copy") and
-tell the operator. Never post publicly: TikTok posts go as drafts to the inbox.
+Write each step to `schedule.step` (and a short `schedule.detail`) as you go, so
+the Scheduled tab shows progress. On any failure set `schedule.status: "error"`
+with a plain `schedule.error` and stop.
+
+1. **telegram** (mandatory, no fallback). Put the post's slides in a folder as
+   `slide1.jpg…` (from the page's `img/<post id>-<N>.jpg`, read with the
+   Artifact tool), then run
+   `python3 -I content-engine/scripts/telegram_compress.py <folder>`.
+   It sends each photo to the Memory Palace bot chat and downloads Telegram's
+   re-encoded copy as `slide<N>_tg.jpg`. It needs `TELEGRAM_BOT_TOKEN` and
+   `TELEGRAM_CHAT_ID` set in the environment (the operator adds them in the
+   cloud environment's settings; same values as Memory Palace) and
+   `api.telegram.org` allowed. If either variable is missing, or Telegram can't
+   be reached, set `error` to "Telegram step can't run: <reason>" and don't
+   upload. Never substitute local compression.
+2. **download**: check every `slide<N>_tg.jpg` exists and opens.
+3. **upload**: not finished for Overture. Postiz uploads from a public URL, and
+   the page's images sit on a private artifact. Until a public copy (or a direct
+   Postiz upload with an API key) is set up, stop here with `error`
+   "Upload to Postiz not set up yet" and tell the operator.
+4. **schedule**: create the Postiz post on the channel above as a TikTok draft
+   (photos to the inbox), with the post's `title` and `caption`, at
+   `schedule.at`. Never post publicly.
 
 ## Check views
 
