@@ -94,9 +94,56 @@ Status field: `posts/<id>.reimagine.caption`.
 
 ## Reimagine slides
 
-Not set up for Overture yet: there is no slide builder or photo source for this
-account. Set `reimagine.slides` to `error` with
-"Slide building isn't set up for Overture yet" and tell the operator.
+Builds the post's text-free photos and the text that goes on them, the same way
+as the Palace engine. Status field: `posts/<id>.reimagine.slides`.
+
+Needs the OpenAI key saved on the cloud environment (network secret for
+api.openai.com). If a request fails with `insufficient_quota` /
+`credit_balance_exhausted`, set `error` to "The OpenAI account has no credits" and
+tell the operator; don't retry.
+
+1. Read the post: `cover`, `subject`, `style`, `notes`, and the original
+   hook's thumbnail, to match its look.
+2. Plan 3 slides (unless the operator asks for another number):
+   - Slide 1: the hook (`cover`).
+   - Slide 2: the turn or payoff that continues the joke or story.
+   - Slide 3: the Overture close, e.g. "mornings deserve better / than a beep",
+     then "Overture: the classical / music alarm". No "link in bio" claims we
+     can't back.
+   For "Reimagine slides" on a post that already has slides, change the
+   composition (camera angle, moment, framing) and keep the same look.
+3. Write `prompts.json` for `content-engine/scripts/generate_slides.py`:
+   - `base`: one shared description used for every slide: who, where, camera
+     position, light, "iPhone photo", "natural phone camera quality", and
+     "No text, no words, no logos, no visible phone screen". Lock the person,
+     room and angle so the slides look like one shoot.
+   - `slides`: only what changes per slide (expression, moment, light).
+   - `model`: `gpt-image-1.5` unless the operator picks another.
+   - Leave plain space in the upper-middle of the frame, where the text goes.
+4. Run `python3 -I content-engine/scripts/generate_slides.py prompts.json <dir>`.
+   It writes `slide1.jpg…` at exactly 1080 × 1920 (9:16; generated at
+   1024 × 1536 and upscaled about 1.25x after the crop).
+5. Look at every slide. Regenerate any with garbled text, extra fingers, a
+   different person or room, or anything in the top 10% / bottom 20% that
+   matters. Delete its `slide<N>.jpg` and `slide<N>_raw.png` and re-run.
+6. Publish them with the page as `img/<post id>-<N>.jpg` (Artifact publish of
+   `content-engine/index.html` with `files`; existing files are kept).
+7. Write on the post:
+   - `slides`: `["img/<post id>-1.jpg", …]`
+   - `overlays`: one per slide, `{ text, style, y, size }`. `text` uses `\n`
+     breaks, 4 to 6 words a line, no emoji. `style` is `outline` (TikTok-style
+     white text with black outline, the default), `tiktok`, `serif` or
+     `serif-bold`, matching the original. `y` is the text's centre as a share of
+     the height, between 0.15 and 0.7 (keep out of the top 10% and bottom 20%).
+     `size` is a share of the width, about 0.06.
+   - `slidePrompts`: the prompts.json used, so the slides can be remade.
+   - `blocker`: "" once the slides are built.
+   - `reimagine.slides`: `{ status: "done", doneAt, detail: "<one line on the composition>" }`.
+8. Reply to the comment with one line on what was built.
+
+The text is never baked into the photos: it's added in the TikTok app from the
+"Slide text to add in TikTok" list. Before anything goes to Postiz, the photos
+still go through the Telegram metadata step (see Approve 2).
 
 ## Approve 2
 
