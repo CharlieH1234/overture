@@ -178,13 +178,29 @@ with a plain `schedule.error` and stop.
    be reached, set `error` to "Telegram step can't run: <reason>" and don't
    upload. Never substitute local compression.
 2. **download**: check every `slide<N>_tg.jpg` exists and opens.
-3. **upload**: not finished for Overture. Postiz uploads from a public URL, and
-   the page's images sit on a private artifact. Until a public copy (or a direct
-   Postiz upload with an API key) is set up, stop here with `error`
-   "Upload to Postiz not set up yet" and tell the operator.
-4. **schedule**: create the Postiz post on the channel above as a TikTok draft
-   (photos to the inbox), with the post's `title` and `caption`, at
-   `schedule.at`. Never post publicly.
+3. **upload**: run `python3 -I content-engine/scripts/postiz_upload.py <folder>`.
+   It uploads only the `slide<N>_tg.jpg` files, in order, to the Postiz media
+   library and prints `[{id, path}, …]` (also saved as `postiz_media.json`). It
+   needs `POSTIZ_API_KEY` in the environment (the operator sets it in the cloud
+   environment's settings) and `api.postiz.com` allowed (it is). Save the list on
+   the post as `postizMedia` (the paths). On HTTP 401/403 set `error` to
+   "Postiz rejected the API key"; on 429 "Postiz rate limit, try again in an hour".
+4. **schedule**: with the Postiz MCP tool `integrationSchedulePostTool`:
+   - `integrationId`: the channel above; `isPremium: false`; `shortLink: false`;
+     `type: "schedule"`; `date`: `schedule.at` (UTC).
+   - `postsAndComments`: one item, `attachments` = the uploaded paths in slide
+     order, `content` = the caption with each line wrapped in `<p>…</p>`
+     (blank lines become `<p></p>`).
+   - `settings`: `title` = the post's `title`, `content_posting_method: "UPLOAD"`,
+     and the required fields `privacy_level: "SELF_ONLY"`, `duet: false`,
+     `stitch: false`, `comment: true`, `autoAddMusic: "no"`,
+     `brand_content_toggle: false`, `brand_organic_toggle: false` (TikTok ignores
+     these in UPLOAD mode).
+   UPLOAD sends the photos to the TikTok app inbox as a draft at that time. The
+   operator adds each slide's text and a sound and publishes within 24 hours, or
+   TikTok discards it. Never use DIRECT_POST unless the operator asks.
+   Then write `schedule.status: "sent"`, `postizId`, `previewUrl` (from the
+   tool's result), `sentAt`, and `step: "schedule"`.
 
 ## Check views
 
