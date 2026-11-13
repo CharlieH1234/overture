@@ -38,6 +38,9 @@ Source: the "Overture — Homepage Copy & Claude Design Prompts" doc
   music or classical radio mornings; people who hate harsh alarms; nappers.
 - Tone: warm, unhurried, a little witty. At most one musical pun per hook.
   Not loud or shouty.
+- **Always write "&" instead of "and"** in everything posted: hooks (`cover`),
+  slide text (`overlays`), TikTok titles and captions, with no exceptions.
+  Internal fields (`notes`, `style`, `subject`, image prompts) don't need it.
 
 The ICP and jobs to be done are not set yet. When they are, add them here and
 use them to choose the angle.
