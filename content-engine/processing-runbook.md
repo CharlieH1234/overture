@@ -137,8 +137,12 @@ tell the operator; don't retry.
 5. Look at every slide. Regenerate any with garbled text, extra fingers, a
    different person or room, or anything in the top 10% / bottom 20% that
    matters. Delete its `slide<N>.jpg` and `slide<N>_raw.png` and re-run.
-6. Publish them with the page as `img/<post id>-<N>.jpg` (Artifact publish of
-   `content-engine/index.html` with `files`; existing files are kept).
+6. Publish them with the page as `img/<post id>-<N>.jpg`, and each small copy
+   `slide<N>_t.jpg` as `img/t/<post id>-<N>.jpg` (Artifact publish of
+   `content-engine/index.html` with `files`; existing files are kept). The cards
+   load the small copies, so a missing one falls back to the full slide but
+   loads slowly. When redoing slides, use new names (e.g. `<post id>-v2-<N>.jpg`)
+   so browsers don't show cached old images.
 7. Write on the post:
    - `slides`: `["img/<post id>-1.jpg", …]`
    - `overlays`: one per slide, `{ text, style, y, size }`. `text` uses `\n`

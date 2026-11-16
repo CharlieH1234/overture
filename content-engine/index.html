@@ -545,7 +545,18 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const card = o.card ? `<div class="ov-card" style="top:${o.card.top * 100}%">${esc(o.card.title || '')}${o.card.body ? `<div class="b">${esc(o.card.body)}</div>` : ''}</div>` : '';
     return card + text;
   }
-  const slideImg = (p, i, alt, lazy) => `<span class="sl"><img src="${esc(p.slides[i])}" alt="${esc(alt)}"${lazy ? ' loading="lazy"' : ''}>${overlay(p, i)}</span>`;
+  // Cards show a small copy (img/t/…, 270×480) so a day of posts doesn't pull megabytes of full-size slides;
+  // the lightbox and TikTok preview use the full 1080×1920 file.
+  const thumbOf = src => /^img\/(?!t\/)/.test(src || '') ? 'img/t/' + src.slice(4) : src;
+  const slideImg = (p, i, alt, lazy, small) => `<span class="sl"><img src="${esc(small ? thumbOf(p.slides[i]) : p.slides[i])}" data-full="${esc(p.slides[i])}" alt="${esc(alt)}"${lazy ? ' loading="lazy"' : ''}>${overlay(p, i)}</span>`;
+  // A failed image retries up to 3 times; a missing small copy falls back to the full slide
+  document.addEventListener('error', e => {
+    const img = e.target; if (!(img instanceof HTMLImageElement) || !img.dataset.full) return;
+    const n = +(img.dataset.tries || 0), src = img.getAttribute('src').split('?')[0];
+    if (n >= 3) { if (src !== img.dataset.full) { img.dataset.tries = '0'; img.src = img.dataset.full; } return; }
+    img.dataset.tries = String(n + 1);
+    setTimeout(() => { img.src = src + '?r=' + (n + 1); }, 700 * (n + 1));
+  }, true);
 
   // The text to type onto each slide in the TikTok app, one Copy per slide
   function textBox(p) {
@@ -556,7 +567,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 
   function thumbs(p) {
     if (!p.slides?.length) return `<div class="thumbs"><div class="thumb empty">Slides not built</div></div>`;
-    return `<div class="thumbs">${p.slides.map((src, i) => `<button type="button" class="thumb" data-lb="${esc(p.id)}" data-i="${i}" aria-label="Open slide ${i + 1} larger">${slideImg(p, i, `Slide ${i + 1}`, true)}<span class="num">${i + 1}</span></button>`).join('')}</div>`;
+    return `<div class="thumbs">${p.slides.map((src, i) => `<button type="button" class="thumb" data-lb="${esc(p.id)}" data-i="${i}" aria-label="Open slide ${i + 1} larger">${slideImg(p, i, `Slide ${i + 1}`, true, true)}<span class="num">${i + 1}</span></button>`).join('')}</div>`;
   }
 
   // One large slide with < > to step through the proposed slides
@@ -565,7 +576,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     if (!p.slides?.length) return `<div class="stepper"><div class="thumb empty big">Slides not built</div></div>`;
     const i = Math.min(slideIdx[p.id] || 0, p.slides.length - 1);
     return `<div class="stepper">
-      <button type="button" class="thumb big" data-lb="${esc(p.id)}" data-i="${i}" aria-label="Open slide ${i + 1} larger">${slideImg(p, i, `Proposed slide ${i + 1}`)}</button>
+      <button type="button" class="thumb big" data-lb="${esc(p.id)}" data-i="${i}" aria-label="Open slide ${i + 1} larger">${slideImg(p, i, `Proposed slide ${i + 1}`, false, true)}</button>
       <div class="step-nav">
         <button type="button" class="step" data-step="${esc(p.id)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Previous slide">&lt;</button>
         <span class="step-n">${i + 1} / ${p.slides.length}</span>

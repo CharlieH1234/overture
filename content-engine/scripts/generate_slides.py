@@ -11,7 +11,8 @@ prompts.json:
 
 For each slide it asks the OpenAI Images API for a 1024x1536 image, then
 centre-crops it to 9:16 and resizes it to 1080x1920 (an upscale of about 1.25x),
-writing <out_dir>/slide<N>.jpg. Raw API images are kept as slide<N>_raw.png.
+writing <out_dir>/slide<N>.jpg, plus a 270x480 copy slide<N>_t.jpg for the
+page's cards. Raw API images are kept as slide<N>_raw.png.
 Slides that already exist are skipped, so a failed run can be re-run.
 
 The request is streamed: in the cloud environment the proxy drops non-streamed
@@ -66,6 +67,8 @@ def finish(raw_path, out_path):
     left, top = (w - cw) // 2, (h - ch) // 2
     im = im.crop((left, top, left + cw, top + ch)).resize((W, H), Image.LANCZOS)
     im.save(out_path, 'JPEG', quality=90, optimize=True, progressive=True)
+    # Small copy for the page's cards (published as img/t/<name>)
+    im.resize((270, 480), Image.LANCZOS).save(out_path[:-4] + '_t.jpg', 'JPEG', quality=80, optimize=True, progressive=True)
 
 
 def one(model, base, i, extra, out_dir):
