@@ -199,8 +199,29 @@ with a plain `schedule.error` and stop.
    - `integrationId`: the channel above; `isPremium: false`; `shortLink: false`;
      `type: "schedule"`; `date`: `schedule.at` (UTC).
    - `postsAndComments`: one item, `attachments` = the uploaded paths in slide
-     order, `content` = the caption with each line wrapped in `<p>…</p>`
-     (blank lines become `<p></p>`).
+     order, `content` = all the text the operator needs, in three labelled
+     sections so it can be copied in one go, each line wrapped in `<p>…</p>`
+     (blank lines become `<p></p>`):
+     ```
+     SLIDE TEXT TO ADD:
+     Slide 1:
+     <slide 1 text, one line per line break>
+     Slide 2:
+     <slide 2 text>
+     Slide 3:
+     <slide 3 text>
+
+     TITLE:
+     <the post's title>
+
+     CAPTION:
+     <the post's caption, ending with the tagline & hashtags>
+     ```
+     Slide text comes from `overlays[].text` (empty lines inside a slide's text
+     are kept). Escape `&` as `&amp;` in the HTML.
+     This whole block becomes the TikTok draft's description, so the operator
+     copies the slide text out, then replaces the description with the CAPTION
+     section before publishing.
    - `settings`: `title` = the post's `title`, `content_posting_method: "UPLOAD"`,
      and the required fields `privacy_level: "SELF_ONLY"`, `duet: false`,
      `stitch: false`, `comment: true`, `autoAddMusic: "no"`,
