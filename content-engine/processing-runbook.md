@@ -88,9 +88,15 @@ a version that keeps the format, and say in `notes` what was dropped.
 
 Status field: `posts/<id>.reimagine.caption`.
 
-- `title`: TikTok title, at most 90 characters.
-- `caption`: starts with the title line, then 2 to 4 short lines in Overture's
-  tone, then the tagline, then the hashtags. Under 2,200 characters.
+- `title`: TikTok title, at most 90 characters. **A short, engaging mini-hook
+  that is different from the slide-1 hook (`cover`)**, never a copy of it.
+  Usually 3 to 8 words, may end with one fitting emoji. Example: hook "your 7am
+  alarm doesn't have to be a shock. it can be grieg." → title "calmest way to
+  start the day 🌅".
+- `caption`: **doesn't repeat the title or the hook.** It starts straight into
+  the body (e.g. "Grieg's Morning Mood opens with one quiet flute…"), 2 to 4
+  short lines in Overture's tone, then the tagline, then the hashtags. Under
+  2,200 characters.
   - **Never mention Overture** (or "the app", "this alarm app", features, the
     trial or how it works). The caption is about the feeling, the mood of the
     piece, and the result: how the morning feels when you wake to it.
