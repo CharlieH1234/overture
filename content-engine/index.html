@@ -725,7 +725,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <p class="cover">${esc(p.cover)}</p>
         ${textBox(p)}
         ${pinBox(p)}
-        <div class="field"><label for="t-${esc(p.id)}">TikTok title (first caption line, max 90)</label><input id="t-${esc(p.id)}" maxlength="90" data-edit-title="${esc(p.id)}" value="${esc(p.title)}" ${state.canWrite ? '' : 'readonly'}></div>
+        <div class="field"><label for="t-${esc(p.id)}">TikTok title (a short mini-hook, max 90; not repeated in the caption)</label><input id="t-${esc(p.id)}" maxlength="90" data-edit-title="${esc(p.id)}" value="${esc(p.title)}" ${state.canWrite ? '' : 'readonly'}></div>
         <div class="field"><label for="c-${esc(p.id)}">Full caption</label><textarea class="caption" id="c-${esc(p.id)}" data-edit-caption="${esc(p.id)}" ${state.canWrite ? '' : 'readonly'} placeholder="Ask Claude to write this caption from the caption rules.">${esc(p.caption)}</textarea>
           <div class="charcount ${len >= 2200 ? 'over' : ''}" data-count-for="${esc(p.id)}">${len} / 2200</div></div>
         <div class="schedule-row">
