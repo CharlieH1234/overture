@@ -9,6 +9,11 @@ prompts.json:
    "base": "shared description used for every slide (person, room, camera, light)",
    "slides": ["slide 1 changes", "slide 2 changes", ...]}
 
+Optional keys: "size" ("1024x1536" default, "1536x1024" landscape or
+"1024x1024" square) and "letterbox": true, which keeps the whole image, scales
+it to 1080 wide & centres it on a black 1080x1920 frame (for formats whose
+photos sit between black bands).
+
 For each slide it asks the OpenAI Images API for a 1024x1536 image, then
 centre-crops it to 9:16 and resizes it to 1080x1920 (an upscale of about 1.25x),
 writing <out_dir>/slide<N>.jpg, plus a 270x480 copy slide<N>_t.jpg for the
@@ -36,8 +41,8 @@ CA = '/root/.ccr/ca-bundle.crt'
 W, H = 1080, 1920
 
 
-def generate(model, prompt, raw_path):
-    body = json.dumps({'model': model, 'prompt': prompt, 'size': '1024x1536', 'quality': 'high',
+def generate(model, prompt, raw_path, size='1024x1536'):
+    body = json.dumps({'model': model, 'prompt': prompt, 'size': size, 'quality': 'high',
                        'n': 1, 'stream': True, 'partial_images': 2}).encode()
     req = urllib.request.Request(API, data=body, headers={
         'Content-Type': 'application/json', 'Authorization': 'Bearer proxy-injected'})
@@ -59,27 +64,33 @@ def generate(model, prompt, raw_path):
         f.write(base64.b64decode(final))
 
 
-def finish(raw_path, out_path):
+def finish(raw_path, out_path, letterbox=False):
     im = Image.open(raw_path).convert('RGB')
     w, h = im.size
-    cw = min(w, round(h * 9 / 16))
-    ch = min(h, round(cw * 16 / 9))
-    left, top = (w - cw) // 2, (h - ch) // 2
-    im = im.crop((left, top, left + cw, top + ch)).resize((W, H), Image.LANCZOS)
+    if letterbox:
+        nh = round(h * W / w)
+        frame = Image.new('RGB', (W, H), (0, 0, 0))
+        frame.paste(im.resize((W, nh), Image.LANCZOS), (0, (H - nh) // 2))
+        im = frame
+    else:
+        cw = min(w, round(h * 9 / 16))
+        ch = min(h, round(cw * 16 / 9))
+        left, top = (w - cw) // 2, (h - ch) // 2
+        im = im.crop((left, top, left + cw, top + ch)).resize((W, H), Image.LANCZOS)
     im.save(out_path, 'JPEG', quality=90, optimize=True, progressive=True)
     # Small copy for the page's cards (published as img/t/<name>)
     im.resize((270, 480), Image.LANCZOS).save(out_path[:-4] + '_t.jpg', 'JPEG', quality=80, optimize=True, progressive=True)
 
 
-def one(model, base, i, extra, out_dir):
+def one(model, base, i, extra, out_dir, size='1024x1536', letterbox=False):
     raw = os.path.join(out_dir, f'slide{i}_raw.png')
     out = os.path.join(out_dir, f'slide{i}.jpg')
     if os.path.exists(out):
         return f'slide {i}: already done'
     try:
         if not (os.path.exists(raw) and os.path.getsize(raw) > 10000):
-            generate(model, base + '\n\n' + extra, raw)
-        finish(raw, out)
+            generate(model, base + '\n\n' + extra, raw, size)
+        finish(raw, out, letterbox)
         return f'slide {i}: ok'
     except urllib.error.HTTPError as e:
         return f'slide {i}: HTTP {e.code} {e.read()[:300]!r}'
@@ -93,7 +104,8 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     model = prompts.get('model', 'gpt-image-1.5')
     with cf.ThreadPoolExecutor(3) as ex:
-        jobs = [ex.submit(one, model, prompts['base'], i + 1, s, out_dir) for i, s in enumerate(prompts['slides'])]
+        size, lb = prompts.get('size', '1024x1536'), bool(prompts.get('letterbox'))
+        jobs = [ex.submit(one, model, prompts['base'], i + 1, s, out_dir, size, lb) for i, s in enumerate(prompts['slides'])]
         for j in jobs:
             print(j.result(), flush=True)
 
