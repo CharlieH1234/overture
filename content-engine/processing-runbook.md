@@ -201,7 +201,17 @@ Status field: `posts/<id>.reimagine.caption`.
   - **End with the tagline on its own line:** "Mornings deserve better than a beep."
   - **Hashtags, in this order:** `#classicalmusic #alarm #wakeup #<composer>`,
     where the last is the featured composer's surname in lowercase
-    (`#grieg`, `#mozart`, `#debussy`, `#bach`, `#satie`). Only those four.
+    (`#grieg`, `#mozart`, `#debussy`, `#bach`, `#satie`), then **one rotating
+    fifth tag** that fits the post. Exactly five, never more (Charlie's
+    decision, 18 Nov; 2025-26 posts in the hook library mostly use exactly 5):
+    - routine & list posts: `#morningroutine`
+    - alarm-sound reveals ("just listen", "it's just an alarm"): `#alarmclock`
+    - painting or moody posts: `#darkacademia`
+    - piano pieces: `#piano`
+    - a famous piece: its own tag, e.g. `#clairdelune`, `#morningmood`
+      (one word, lowercase, no spaces or punctuation)
+    Never `#fyp`, `#foryou`, `#viral`, `#777`, `#lucky` or other filler: in the
+    hook library they made no difference to views, & they don't fit the voice.
 - Keep `cover` and `title` exactly as saved when `locked.cover` / `locked.title`
   is true.
 - For "Reimagine caption", take a different angle from the current caption.
