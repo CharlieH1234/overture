@@ -240,7 +240,7 @@ tell the operator; don't retry.
      of a beep" or "overture: grieg at 6:30, / radio one tap away". No sales line,
      no price, never implying the radio starts by itself.
    - Last slide: the close, ending on the tagline "mornings deserve better /
-     than a beep". No "link in bio" claims we can't back.
+     than a beeping alarm". No "link in bio" claims we can't back.
    - Every other slide's text is about the feeling, the music & the morning,
      never the app.
    - The app slide's image is the screenshot itself, never generated: place it
