@@ -21,29 +21,99 @@ or `error` with an `error` the operator can act on.
 
 ## What Overture is
 
-Source: the "Overture — Homepage Copy & Claude Design Prompts" doc
-(https://claude.ai/artifact/LoDqu9MLPJmU7RrgeK6FTL). Re-read it if it may have changed.
+Sources: the `overture-content-engine` skill (brief, personas, catalogue,
+guardrails; synced 18 Nov 2026) and the "Overture — Homepage Copy" doc
+(https://claude.ai/artifact/LoDqu9MLPJmU7RrgeK6FTL). Where this runbook and the
+skill differ, this runbook wins: Charlie chose (18 Nov) to keep slide text out of
+the images and to keep his caption rules.
 
-- The classical music alarm for iPhone and iPad.
-- The idea is the two-movement morning. Movement I: a short extract of a real
-  classical recording fades in. Movement II: live classical radio plays on, one tap away.
-- Core promise: "Mornings deserve better than a beep."
-- Pieces named in the app copy: Grieg's Morning Mood, Debussy's Clair de Lune,
-  Bach's Prelude in C Major, Satie, Mozart, Ravel. Only name a piece as being
-  in Overture if it is in that list; anything else, write "check it's in the app".
-- Proof points that can be claimed: rings on the Lock Screen even in Silent or
-  Focus (AlarmKit); gentle fade-in; the track keeps playing if a station can't be
-  reached; timers that end in music; no account or login; 3-day free trial.
-- Likely audience (inferred, not tested): people who already like classical
-  music or classical radio mornings; people who hate harsh alarms; nappers.
-- Tone: warm, unhurried, a little witty. At most one musical pun per hook.
-  Not loud or shouty.
+- **One line:** an iPhone alarm that wakes you to a classical piece, then plays
+  live classical radio with one tap. "Mornings deserve better than a beep."
+  "Wake in two movements."
+- **Who it's for:** UK professional, 25 to 40, who wakes or commutes to classical
+  radio & wants it without the box by the bed.
+- **Voice:** premium, warm, brief, a little witty. British spelling. No
+  exclamation marks. Never "game-changer". At most one musical pun per hook.
 - **Always write "&" instead of "and"** in everything posted: hooks (`cover`),
   slide text (`overlays`), TikTok titles and captions, with no exceptions.
   Internal fields (`notes`, `style`, `subject`, image prompts) don't need it.
+- **Proof points that can be claimed:** rings on the Lock Screen even in Silent or
+  Focus; gentle fade-in; the piece keeps playing if a station can't be reached;
+  timers that end in music; no account or login; 3-day free trial.
 
-The ICP and jobs to be done are not set yet. When they are, add them here and
-use them to choose the angle.
+**Personas** (label every post with one in `persona`):
+
+| Persona | Job, in their words |
+| --- | --- |
+| Radio-loyal professional (primary) | "Keep my classical radio, lose the box by the bed." |
+| Romantic aesthete | "Romanticise my morning." |
+| Dark-winter-mornings riser (Oct–Feb) | "Make 6:30 in the dark less grim." |
+| Parents | "Give me a calm minute before the chaos." |
+| Sensitive wakers | "Wake me without the jolt." |
+| Student (university, 18+ only) | "Get me into study mode." |
+| Traveller | "My usual wake-up, wherever I sleep." |
+| Lapsed listener | "Bring classical back into my day." |
+| Bedtime listener | Tease as "coming soon" only, once Charlie confirms wording |
+
+Not targeted: heavy sleepers who need a loud alarm; digital-detox seekers.
+
+**Pieces in the app** (the only pieces a post may feature; use these names
+exactly): Prelude in C Major (Bach) · Symphony No. 5 in C Minor (Beethoven) ·
+Minuet for String Quartet (Boccherini) · Pomp and Circumstance March No. 1 in D
+(Elgar) · Gymnopédie No. 1 (Satie) · The Marriage of Figaro (Mozart) · Flight of
+the Bumblebee (Rimsky-Korsakov) · Rosamunde Quartet (Schubert) · Arabesque No. 1
+(Debussy) · Clair de Lune (Debussy) · Morning Mood (Grieg) · Pavane for a Dead
+Princess (Ravel) · The Swan (Saint-Saëns) · Waltz of the Flowers, Nutcracker
+(Tchaikovsky) · Moonlight Sonata (Beethoven) · Miserere (Allegri) · Chinese
+Dance, March & Overture Part 1, Nutcracker (Tchaikovsky) · Ride of the Valkyries
+(Wagner). Festive season only: O Christmas Tree · O Come, All Ye Faithful ·
+Silent Night · Carol of the Bells. A reference post built on another piece can
+lend its format, but the post uses a piece from this list.
+
+**Live radio, UK:** only Classic FM, BBC Radio 3 & Magic Classical. Posts may name
+these three; never mention or show any other station; no station logos as
+graphics.
+
+## Guardrails (check every hook, slide & caption)
+
+- **The radio needs a tap.** Never show or say that live radio plays as the alarm
+  or starts by itself. The alarm plays a piece; the radio is one tap away.
+- **Claims:** music *can help* ("can help lower stress", "wake without the jolt",
+  "helps you focus"). Never a percentage, "proven", "clinically", "guaranteed",
+  the Mozart effect, or treating ADHD, insomnia, anxiety disorders or SAD.
+- **No fabricated social proof:** no made-up reviews, ratings, user counts,
+  quotes, or "someone told me / my friend said" hooks unless it really happened.
+  Numbers become `[NUMBER]` for Charlie.
+- **No performer, orchestra or recording names** unless Charlie confirms the licence.
+- **Imagery:** original or AI-generated only; nothing from films or TV; no real
+  named venues. Never generate the app's interface with an image model.
+- **Copy formats, never claims:** a reference's health claims & hashtags don't carry over.
+- **Label AI images:** Postiz's TikTok draft mode can't set the AI-generated
+  label, so tell Charlie to switch it on in TikTok before publishing.
+- **One slideshow per account per day,** never two of the same format on one day.
+- If a format only works by breaking a guardrail, drop the format.
+
+## App screens
+
+Real screenshots come from the Overture Screenshots Figma file
+(https://www.figma.com/design/syHqZFA4ClUDvQee3Mff4Z/Overture-Screenshots, page
+`0:1`). Export them fresh each session they're needed (Figma `get_screenshot`,
+maxDimension 2400), index what each shows, and never reuse old exports without
+checking. Never paint over text in a screenshot.
+
+- **Where:** at most one app slide per post, on slide 3 or later (never slide 1).
+  It's the one place the slide text can name Overture, naturally, e.g. "found an
+  alarm that plays Grieg instead of a beep" over the alarm list. The caption still
+  never names Overture.
+- **Which:** an "Homescreen alarm set NN" frame showing the post's own piece
+  (frames exist for Arabesque No. 1, The Marriage of Figaro, Pomp & Circumstance,
+  Minuet for String Quartet, Prelude in C Major, Flight of the Bumblebee), the
+  ringing lock screen, or the live radio screens. Not the "Appstore screenshots"
+  frames: they read as ads.
+- **Ask Charlie first** before using a screen that shows a station logo or a
+  performer's name.
+- Figma's MCP calls are limited on Charlie's Starter plan. If a call is refused,
+  stop and tell Charlie; don't fall back to old exports.
 
 ## Reimagine hook
 
@@ -61,10 +131,11 @@ Triggered by **Add: Ideas** on a hook (which creates the idea post) or by
      to a classical piece, mornings without a beep, the radio playing on.
    - One hook, at most about 20 words, in the original's casing style.
    - Never mention Overture (or "this app") in the hook.
-   - No health or medical claims (dopamine, cortisol, anxiety cures, healing),
-     even if the original made one. Borrow the format, not the claim.
-   - No made-up stats, studies, reviews or ratings.
-   - Name a real piece and composer only from the list above.
+   - Follow the Guardrails above. In particular: borrow the format, never the
+     original's claim; no "someone told me" or made-up social proof; no made-up
+     stats, studies, reviews or ratings.
+   - Feature one piece from "Pieces in the app", named exactly as listed.
+   - Pick the persona it speaks to and save it as `persona`.
    - If `locked.cover` is true, the operator wrote the headline: keep `cover`
      exactly as it is and only refresh the other fields.
 4. Write these fields on the post:
@@ -120,13 +191,23 @@ tell the operator; don't retry.
 
 1. Read the post: `cover`, `subject`, `style`, `notes`, and the original
    hook's thumbnail, to match its look.
-2. Plan 3 slides (unless the operator asks for another number):
-   - Slide 1: the hook (`cover`).
+2. Plan 3 slides, or 4 with an app slide (unless the operator asks otherwise):
+   - Slide 1: the hook (`cover`). Never an app screen or the Overture name.
    - Slide 2: the turn or payoff that continues the joke or story.
-   - Slide 3: the close, ending on the tagline "mornings deserve better /
+   - Optional app slide (slide 3, before the close): a real screenshot from the
+     Overture Screenshots Figma file (see "App screens"), ideally the alarm list
+     showing this post's piece. This is the only slide whose text may name
+     Overture, and only naturally, e.g. "found an alarm that plays grieg / instead
+     of a beep" or "overture: grieg at 6:30, / radio one tap away". No sales line,
+     no price, never implying the radio starts by itself.
+   - Last slide: the close, ending on the tagline "mornings deserve better /
      than a beep". No "link in bio" claims we can't back.
-   - **Never mention Overture on any slide** (no app name, features or "this
-     app"). Slide text is about the feeling, the music and the morning.
+   - Every other slide's text is about the feeling, the music & the morning,
+     never the app.
+   - The app slide's image is the screenshot itself, never generated: place it
+     whole on a 1080 × 1920 canvas over a blurred, darkened copy of itself
+     (crop to the part that matters if needed), write `slide<N>.jpg` & the
+     270 × 480 `slide<N>_t.jpg`, and leave space for the text.
    For "Reimagine slides" on a post that already has slides, change the
    composition (camera angle, moment, framing) and keep the same look.
 3. Write `prompts.json` for `content-engine/scripts/generate_slides.py`:
