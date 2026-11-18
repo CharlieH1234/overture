@@ -118,6 +118,29 @@ checking. Never paint over text in a screenshot.
 - Figma's MCP calls are limited on Charlie's Starter plan. If a call is refused,
   stop and tell Charlie; don't fall back to old exports.
 
+## Proven formats (Figma library, H-160 to H-176)
+
+Charlie's 17 reference slideshows are hooks H-160 to H-176 (collection "Figma
+slideshows"); each has its slide text, stats & an Overture angle in `note`.
+Different accounts & no view counts, so treat these as patterns, not proof.
+When an idea doesn't come from a specific hook, start from one of these:
+
+1. **"Just listen" reveal** (H-172, H-173, H-176; also H-170, H-171, H-174).
+   Biggest reach (H-172: 533K likes). Plain colour cards: "\"it's just an
+   alarm\"" → "Shut Up" → "JUST LISTEN", then an AI painting with a title card
+   for one piece (composer in script, piece in serif); optional app slide after.
+   The piece must be the post's sound: tell Charlie which piece to pick in
+   TikTok, because Postiz drafts go up without music.
+2. **Gentle protocol list** (H-168, H-164, H-160). Most saves (H-168: 0.72
+   saves per like). First-person or "formula" hook about waking up, numbered
+   named rules with real detail per slide over dimmed moody photos or dark
+   cards, the app as a "bonus tip" near the end.
+3. **Aesthetic one-line list** (H-166, H-169). One lowercase line per slide over
+   letterboxed lifestyle photos; the app is one item mid-list ("my fave alarm").
+
+Skip as main formats: numbered series cards without a hook (H-175), the
+competitor listicle (H-165, too little data).
+
 ## Reimagine hook
 
 Triggered by **Add: Ideas** on a hook (which creates the idea post) or by
