@@ -239,6 +239,21 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 .sched-state { font: 500 12px var(--mono); }
 .rstate { font-size: 12px; color: var(--muted); text-align: right; max-width: 180px; }
 .rstate.good { color: var(--good); } .rstate.bad { color: var(--bad); }
+.pskill { font-size: 12px; color: var(--muted); text-align: right; max-width: 240px; display: flex; align-items: center; gap: 2px; justify-content: flex-end; }
+.pskill b { color: var(--ink); font-weight: 600; }
+.pdlg { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 0; width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
+.pdlg::backdrop { background: rgba(8, 10, 9, 0.6); }
+.pdlg .pd-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 10px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+.pdlg h2 { margin: 0; font: 600 17px var(--display); }
+.pdlg .pd-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pdlg .pd-body { padding: 12px 18px 18px; display: grid; gap: 12px; }
+.pdlg .pd-k { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+.pdlg .pd-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.pdlg .pd-meta span { font: 12px var(--mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; }
+.pdlg pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 12.5px/1.5 var(--mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+.pdlg ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.pdlg ol li pre { margin-top: 2px; }
+.pdlg ul.pd-refs { margin: 0; padding-left: 18px; font-size: 13px; }
 .steps { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
 .steps li { display: flex; align-items: center; gap: 8px; color: var(--muted); }
 .steps li.done { color: var(--good); }
@@ -317,6 +332,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   </figure>
 </div>
 <div id="tt" class="tt-wrap" hidden role="dialog" aria-modal="true" aria-label="TikTok preview"></div>
+<dialog id="promptdlg" class="pdlg" aria-labelledby="pd-title"></dialog>
 <div id="toast" class="toast" hidden role="status"></div>
 
 <script>
@@ -697,11 +713,49 @@ button.step:disabled { opacity: 0.35; cursor: default; }
               r.status === 'queued' ? 'Waiting for Claude…'
               : r.status === 'working' ? (r.detail || 'Claude is working on it…')
               : r.status === 'error' ? (r.error || 'Failed')
-              : kind === 'hook' ? 'Overture hook ready' : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}`;
+              : kind === 'hook' ? 'Overture hook ready' : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}${kind === 'slides' ? promptLine(p) : ''}`;
         }).join('')}
       </div>
     </article>`;
   }
+
+  // Under "Reimagine slides": which prompt skill built the slides, with an icon that opens the full prompt
+  const INFO_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-5h2v2h-2v-2zm0-8h2v6h-2V7z"/></svg>';
+  function promptLine(p) {
+    const sp = p.slidePrompts, sk = sp?.skill;
+    const label = sk ? `<span>Prompt skill: <b>${esc(sk.headline || sk.name)}</b></span>`
+      : sp ? '<span>Prompt skill: <b>house prompt</b> (before GPT-Image2-Skill)</span>'
+      : '<span>Prompt skill: <b>GPT-Image2-Skill</b>, picked when the slides are built</span>';
+    const btn = sp ? `<button type="button" class="icon-btn" data-prompt="${esc(p.id)}" aria-label="Show the full slide prompt for ${esc(p.ref || p.id)}" title="Show the full prompt">${INFO_ICON}</button>` : '';
+    return `<div class="pskill">${label}${btn}</div>`;
+  }
+  function openPrompt(p) {
+    const sp = p.slidePrompts || {}, sk = sp.skill;
+    const meta = [sp.model && `model ${sp.model}`, sp.size && `size ${sp.size}`, sp.letterbox && 'letterboxed', sp.quality && `quality ${sp.quality}`].filter(Boolean);
+    const known = new Set(['skill', 'model', 'size', 'letterbox', 'quality', 'base', 'slides']);
+    const extra = Object.entries(sp).filter(([k, v]) => !known.has(k) && typeof v === 'string');
+    const d = $('#promptdlg');
+    d.innerHTML = `<div class="pd-head"><div><h2 id="pd-title">Slide prompt · ${esc(p.ref || p.id)}</h2>
+        <div class="pd-sub">${sk ? `${esc(sk.name || 'Prompt skill')}: ${esc(sk.headline || '')}` : 'House prompt, written before GPT-Image2-Skill was added'}</div></div>
+        <div><button type="button" class="btn" data-pd-copy>Copy</button> <button type="button" class="btn" data-pd-close>Close</button></div></div>
+      <div class="pd-body">
+        ${meta.length ? `<div class="pd-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div>` : ''}
+        ${sk?.refs?.length ? `<div><div class="pd-k">Skill sections used</div><ul class="pd-refs">${sk.refs.map(r => `<li>${esc(r)}</li>`).join('')}</ul>${sk.source ? `<div class="pd-sub">Source: ${esc(sk.source)}</div>` : ''}</div>` : ''}
+        ${sp.base ? `<div><div class="pd-k">Shared prompt (every slide)</div><pre>${esc(sp.base)}</pre></div>` : ''}
+        ${Array.isArray(sp.slides) && sp.slides.length ? `<div><div class="pd-k">Per slide</div><ol>${sp.slides.map(s => `<li><pre>${esc(s)}</pre></li>`).join('')}</ol></div>` : ''}
+        ${extra.map(([k, v]) => `<div><div class="pd-k">${esc(k)}</div><pre>${esc(v)}</pre></div>`).join('')}
+      </div>`;
+    d.dataset.post = p.id;
+    d.showModal();
+  }
+  $('#promptdlg').addEventListener('click', async e => {
+    const d = $('#promptdlg');
+    if (e.target === d || e.target.closest('[data-pd-close]')) return d.close();
+    if (e.target.closest('[data-pd-copy]')) {
+      const p = state.posts.find(x => x.id === d.dataset.post);
+      toast(await copyText(JSON.stringify(p?.slidePrompts || {}, null, 2)) ? 'Prompt copied' : 'Could not copy: select the text and copy it by hand');
+    }
+  });
 
   // Shown while the caption or title is missing: asks Claude to write both (same flow as Reimagine caption)
   function captionBtn(p) {
@@ -825,6 +879,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (t.dataset.gotoHook) { state.view = 'hooks'; state.cat = 'All'; state.status = 'all'; state.platform = 'all'; state.q = t.dataset.gotoHook; render(); }
     else if (t.dataset.step) { const p = state.posts.find(x => x.id === t.dataset.step); slideIdx[p.id] = Math.max(0, Math.min(p.slides.length - 1, (slideIdx[p.id] || 0) + +t.dataset.dir)); render(); view.querySelector(`[data-step="${CSS.escape(p.id)}"][data-dir="${t.dataset.dir}"]`)?.focus(); }
     else if (t.dataset.copyText) { const p = state.posts.find(x => x.id === t.dataset.copyText); toast(await copyText(p.overlays[+t.dataset.i].text) ? `Slide ${+t.dataset.i + 1} text copied` : 'Could not copy: select the text and copy it by hand'); }
+    else if (t.dataset.prompt) { const p = state.posts.find(x => x.id === t.dataset.prompt); if (p) openPrompt(p); }
     else if (t.dataset.copyPin) { const p = state.posts.find(x => x.id === t.dataset.copyPin); toast(await copyText(p.pinterest.join('\n')) ? 'Pinterest search terms copied' : 'Could not copy: select the terms and copy them by hand'); }
     else if (t.dataset.editField) { state.editing = { id: t.dataset.editField, field: t.dataset.field }; render(); const el = view.querySelector('[data-edit-input]'); el?.focus(); el?.setSelectionRange(el.value.length, el.value.length); }
     else if (t.dataset.saveField) await saveField(t.dataset.saveField, t.dataset.field);

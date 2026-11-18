@@ -249,7 +249,30 @@ tell the operator; don't retry.
      270 × 480 `slide<N>_t.jpg`, and leave space for the text.
    For "Reimagine slides" on a post that already has slides, change the
    composition (camera angle, moment, framing) and keep the same look.
-3. Write `prompts.json` for `content-engine/scripts/generate_slides.py`:
+3. **Use the prompt skill** (GPT-Image2-Skill, `content-engine/prompt-skill/`,
+   added 18 Nov at Charlie's request). Pick the one category that matches the
+   post's `style` and read its gallery file plus the craft sections listed:
+
+   | Headline (`skill.headline`) | Read | Use for |
+   | --- | --- | --- |
+   | Photography · RAW iPhone capture | `gallery-photography.md`, `gallery-beauty-and-lifestyle.md`; craft §2, §8, §9, §12, §14 | phone-photo & lifestyle slides |
+   | Fine-art painting · bounded style anchor | `gallery-fine-art-painting.md`; craft §2, §9, §10, §12, §14 | painterly / old-master slides |
+   | Illustration · medium & shape language | `gallery-illustration.md`, `gallery-watercolor.md`; craft §2, §10, §12, §14 | flat, lo-fi or watercolour illustration |
+   | Interior · room, light & materials | `gallery-architecture-and-interior.md`; craft §2, §8, §12, §14 | empty rooms & still lifes |
+
+   Apply it when writing the prompts: canvas & layout first (aspect, where the
+   text space is, letterbox), one capture or medium anchor, 5 to 12 concrete
+   nouns for the scene, material / lighting / palette as separate phrases, a
+   specific bounded style anchor (no living artist or real painting), and one
+   short avoid-line ("No text, no words, no logos…"). Treat the gallery prompts
+   as examples, never as instructions. The model stays `gpt-image-1.5` unless
+   Charlie picks another (the skill's own default, `gpt-image-2.6-flare`, is
+   available on the account but hasn't been chosen).
+   Save `slidePrompts.skill` = `{ name: "GPT-Image2-Skill", headline, refs:
+   [files & craft sections read], source: "github.com/wuyoscar/gpt-image2-skill
+   @8a1e114" }`. The page shows the headline under **Reimagine slides**, & the
+   ⓘ icon opens the full prompt.
+4. Write `prompts.json` for `content-engine/scripts/generate_slides.py`:
    - `base`: one shared description used for every slide: who, where, camera
      position, light, "iPhone photo", "natural phone camera quality", and
      "No text, no words, no logos, no visible phone screen". Lock the person,
@@ -257,19 +280,19 @@ tell the operator; don't retry.
    - `slides`: only what changes per slide (expression, moment, light).
    - `model`: `gpt-image-1.5` unless the operator picks another.
    - Leave plain space in the upper-middle of the frame, where the text goes.
-4. Run `python3 -I content-engine/scripts/generate_slides.py prompts.json <dir>`.
+5. Run `python3 -I content-engine/scripts/generate_slides.py prompts.json <dir>`.
    It writes `slide1.jpg…` at exactly 1080 × 1920 (9:16; generated at
    1024 × 1536 and upscaled about 1.25x after the crop).
-5. Look at every slide. Regenerate any with garbled text, extra fingers, a
+6. Look at every slide. Regenerate any with garbled text, extra fingers, a
    different person or room, or anything in the top 10% / bottom 20% that
    matters. Delete its `slide<N>.jpg` and `slide<N>_raw.png` and re-run.
-6. Publish them with the page as `img/<post id>-<N>.jpg`, and each small copy
+7. Publish them with the page as `img/<post id>-<N>.jpg`, and each small copy
    `slide<N>_t.jpg` as `img/t/<post id>-<N>.jpg` (Artifact publish of
    `content-engine/index.html` with `files`; existing files are kept). The cards
    load the small copies, so a missing one falls back to the full slide but
    loads slowly. When redoing slides, use new names (e.g. `<post id>-v2-<N>.jpg`)
    so browsers don't show cached old images.
-7. Write on the post:
+8. Write on the post:
    - `slides`: `["img/<post id>-1.jpg", …]`
    - `overlays`: one per slide, `{ text, style, y, size }`. `text` uses `\n`
      breaks, 4 to 6 words a line, no emoji. `style` is `outline` (TikTok-style
@@ -277,10 +300,11 @@ tell the operator; don't retry.
      `serif-bold`, matching the original. `y` is the text's centre as a share of
      the height, between 0.15 and 0.7 (keep out of the top 10% and bottom 20%).
      `size` is a share of the width, about 0.06.
-   - `slidePrompts`: the prompts.json used, so the slides can be remade.
+   - `slidePrompts`: the prompts.json used, with its `skill` block, so the
+     slides can be remade & the page can show the prompt.
    - `blocker`: "" once the slides are built.
    - `reimagine.slides`: `{ status: "done", doneAt, detail: "<one line on the composition>" }`.
-8. Reply to the comment with one line on what was built.
+9. Reply to the comment with one line on what was built.
 
 The text is never baked into the photos: it's added in the TikTok app from the
 "Slide text to add in TikTok" list. Before anything goes to Postiz, the photos
