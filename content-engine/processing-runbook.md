@@ -81,9 +81,12 @@ graphics.
 - **Claims:** music *can help* ("can help lower stress", "wake without the jolt",
   "helps you focus"). Never a percentage, "proven", "clinically", "guaranteed",
   the Mozart effect, or treating ADHD, insomnia, anxiety disorders or SAD.
-- **No fabricated social proof:** no made-up reviews, ratings, user counts,
-  quotes, or "someone told me / my friend said" hooks unless it really happened.
-  Numbers become `[NUMBER]` for Charlie.
+- **Story hooks are allowed:** made-up "someone told me / my friend said / my
+  dad…" anecdotes are fine as storytelling (Charlie's decision, 18 Nov). Keep
+  the person unnamed or generic (never a real, named person), & the music
+  claims inside the story still follow the Claims rule above.
+- **No fabricated social proof:** no made-up reviews, ratings, user counts or
+  stats. Numbers become `[NUMBER]` for Charlie.
 - **No performer, orchestra or recording names** unless Charlie confirms the licence.
 - **Imagery:** original or AI-generated only; nothing from films or TV; no real
   named venues. Never generate the app's interface with an image model.
@@ -132,8 +135,9 @@ Triggered by **Add: Ideas** on a hook (which creates the idea post) or by
    - One hook, at most about 20 words, in the original's casing style.
    - Never mention Overture (or "this app") in the hook.
    - Follow the Guardrails above. In particular: borrow the format, never the
-     original's claim; no "someone told me" or made-up social proof; no made-up
-     stats, studies, reviews or ratings.
+     original's claim; no made-up stats, studies, reviews or ratings.
+     "Someone told me" / "my dad…" story hooks are fine (unnamed, made-up
+     people only).
    - Feature one piece from "Pieces in the app", named exactly as listed.
    - Pick the persona it speaks to and save it as `persona`.
    - If `locked.cover` is true, the operator wrote the headline: keep `cover`
