@@ -28,7 +28,7 @@ skill differ, this runbook wins: Charlie chose (18 Nov) to keep slide text out o
 the images and to keep his caption rules.
 
 - **One line:** an iPhone alarm that wakes you to a classical piece, then plays
-  live classical radio with one tap. "Mornings deserve better than a beep."
+  live classical radio with one tap. "Mornings deserve better than a beeping alarm."
   "Wake in two movements."
 - **Who it's for:** UK professional, 25 to 40, who wakes or commutes to classical
   radio & wants it without the box by the bed.
@@ -198,7 +198,9 @@ Status field: `posts/<id>.reimagine.caption`.
   - **Never mention Overture** (or "the app", "this alarm app", features, the
     trial or how it works). The caption is about the feeling, the mood of the
     piece, and the result: how the morning feels when you wake to it.
-  - **End with the tagline on its own line:** "Mornings deserve better than a beep."
+  - **End with the tagline on its own line:** "Mornings deserve better than a
+    beeping alarm." (changed from "…than a beep." on 18 Nov; on a closing
+    slide it's "mornings deserve better\nthan a beeping alarm")
   - **Hashtags, in this order:** `#classicalmusic #alarm #wakeup #<composer>`,
     where the last is the featured composer's surname in lowercase
     (`#grieg`, `#mozart`, `#debussy`, `#bach`, `#satie`), then **one rotating
