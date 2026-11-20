@@ -310,6 +310,26 @@ The text is never baked into the photos: it's added in the TikTok app from the
 "Slide text to add in TikTok" list. Before anything goes to Postiz, the photos
 still go through the Telegram metadata step (see Approve 2).
 
+## Reimagine with edits
+
+The **Reimagine with edits** button on an idea card lets Charlie say how to
+redo the slides, hook or caption ("no alarm clock on slide 2", "make slide 1
+brighter"). The request arrives as "reimagine the <kind> of P-NNN … with these
+edits from me: "<direction>"", & the direction is also saved as
+`posts/<id>.reimagine.<kind>.direction`.
+
+- Follow the matching section (Reimagine slides / hook / caption), but the
+  direction wins over the defaults there: e.g. keep the current composition if
+  it only asks to remove one object, or keep the hook if it only asks for a
+  different piece. Guardrails still apply; if a direction would break one, do
+  the rest & say in the reply what you left out & why.
+- For slides, redo only the slides the direction is about & keep the others
+  (same names for kept slides, new `-vN-` names for changed ones). Put the
+  direction into the prompts as concrete instructions & avoid-lines, not as
+  quoted text.
+- Keep `direction` on the status when you set it to `done`, so the card shows
+  what was asked. Reply with one line on what changed.
+
 ## Approve 2
 
 Channel: **Overture.alarm.app** (Postiz TikTok, integration id
