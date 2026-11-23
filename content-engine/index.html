@@ -743,8 +743,9 @@ button.step:disabled { opacity: 0.35; cursor: default; }
           ${src.orig ? `<dl class="mini">${METRICS.map(([k, l]) => `<dt>${l}</dt><dd>${fmtN(src.orig[k])}</dd>`).join('')}</dl>` : `<div class="cmp-empty">No stats recorded for the original</div>`}
         </section>`
       : `<section class="side-block orig-block"><div class="cmp-h">Original post</div><div class="cmp-empty">New hook with no original to copy</div></section>`;
+    const ex = p.experiment;
     return `<article class="card idea">
-      <div class="when"><span class="time">${esc(p.time)}</span>${p.ref ? `<span class="ref-id">${esc(p.ref)}</span>` : ""}<span class="persona">${esc(PERSONA_SHORT[p.persona] || p.persona)}</span></div>
+      <div class="when"><span class="time">${esc(p.time)}</span>${p.ref ? `<span class="ref-id">${esc(p.ref)}</span>` : ""}<span class="persona">${esc(PERSONA_SHORT[p.persona] || p.persona)}</span>${ex ? `<span class="an-hchip" title="${esc(ex.question || '')}">${esc(ex.id)} · ${esc(ex.name)}</span>${ex.format ? `<span class="an-fchip">${esc(ex.format)}</span>` : ''}` : ''}</div>
       <div class="pair-blocks">
         ${origBlock}
         <section class="side-block ours-block"><div class="cmp-h">Our proposal <span class="ref-id">${esc(p.ref || "")}</span></div>

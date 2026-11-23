@@ -141,6 +141,25 @@ When an idea doesn't come from a specific hook, start from one of these:
 Skip as main formats: numbered series cards without a hook (H-175), the
 competitor listicle (H-165, too little data).
 
+## Test week 24–29 Nov (3 posts a day)
+
+Charlie's call (23 Nov): 18 test posts, P-028 to P-045, 3 a day at 07:30, 16:30
+& 21:00, each tagged `experiment` (`id`, `name`, `question`, `format`,
+`hookType`). For this week the "one slideshow per account per day" rule is
+relaxed; still never put two posts of the same format back to back. Every
+post uses a different piece from the app's catalogue (the two series posts
+list four each).
+
+- A (hook test, Landscape), B (format test, hook "the perfect classical
+  alarm?"), C (piece test, Quad), D (rebuttal repeat, Block colour), E
+  (series test).
+- New formats: **Sunrise photo** (no person) & **App screenshot** (B6: a real
+  "Homescreen alarm set" frame on slide 1, a one-off exception to the app-slide
+  rule; hook & caption still don't name Overture; never AI-generate the app).
+- Build slides in the post's `experiment.format`, not a new one. Read stats at
+  48 hours & compare within each experiment; because the pieces differ, look
+  for patterns across several posts rather than single winners.
+
 ## Reimagine hook
 
 Triggered by **Add: Ideas** on a hook (which creates the idea post) or by
