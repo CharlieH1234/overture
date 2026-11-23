@@ -41,7 +41,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .masthead .meta b { color: var(--ink); font-weight: 500; }
 
 /* Pipeline tabs: the stages a post moves through */
-.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--line); margin-bottom: 20px; }
+.pipeline { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--line); margin-bottom: 20px; }
 .pipeline button { border: 0; background: var(--surface); padding: 12px 14px; text-align: left; cursor: pointer; display: grid; gap: 2px; min-width: 0; }
 .pipeline .step { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
 .pipeline .label { font-weight: 600; font-size: 15px; }
@@ -239,6 +239,33 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 .sched-state { font: 500 12px var(--mono); }
 .rstate { font-size: 12px; color: var(--muted); text-align: right; max-width: 180px; }
 .rstate.good { color: var(--good); } .rstate.bad { color: var(--bad); }
+.an { display: grid; gap: 16px; }
+.an-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.an-head h2 { margin: 0; font: 600 20px var(--display); }
+.an-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.an-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.an-k { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.an-v { font: 600 24px var(--sans); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.an-sub { font-size: 12px; color: var(--muted); }
+.an-note { margin: 0; font-size: 13px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.an-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.an-bar select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.an-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.an-row { display: grid; grid-template-columns: 36px 72px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.an-rank { font: 600 20px var(--display); color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }
+.an-thumb { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 6px; overflow: hidden; width: 72px; aspect-ratio: 9 / 16; }
+.an-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.an-thumb.empty { display: grid; place-items: center; font-size: 11px; color: var(--muted); background: var(--surface-2); }
+.an-main .cover { margin: 4px 0 2px; }
+.an-stats { display: grid; grid-template-columns: repeat(3, minmax(70px, auto)); gap: 4px 14px; margin: 0; }
+.an-stats div { text-align: right; }
+.an-stats dt { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.an-stats dd { margin: 0; font: 600 15px var(--sans); font-variant-numeric: tabular-nums; }
+.an-stats .on dd, .an-stats .on dt { color: var(--accent); }
+.an-unlinked { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.an-unlinked summary { cursor: pointer; font-weight: 600; }
+.an-unlinked ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+@media (max-width: 760px) { .an-row { grid-template-columns: 28px 60px minmax(0, 1fr); } .an-thumb { width: 60px; } .an-stats { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); } .an-stats div { text-align: left; } }
 .redo-box { grid-column: 1 / -1; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 12px; display: grid; gap: 8px; }
 .redo-box .redo-h { font: 600 14px var(--sans); }
 .redo-box fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
@@ -326,6 +353,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     <button role="tab" data-view="review" id="tab-review"><span class="step">Step 2</span><span class="label">Review</span><span class="count" data-count="review">–</span></button>
     <button role="tab" data-view="scheduled" id="tab-scheduled"><span class="step">Step 3</span><span class="label">Scheduled</span><span class="count" data-count="scheduled">–</span></button>
     <button role="tab" data-view="posted" id="tab-posted"><span class="step">Done</span><span class="label">Posted</span><span class="count" data-count="posted">–</span></button>
+    <button role="tab" data-view="analysis" id="tab-analysis"><span class="step">Insights</span><span class="label">Analysis</span><span class="count" data-count="analysis">–</span></button>
   </nav>
 
   <div id="status" class="notice">Loading the hook library and week plan…</div>
@@ -378,7 +406,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   // Where a hook was found: its platform field, else read from the post link
   const PLATFORMS = ['TikTok', 'Instagram', 'Other'];
   const platOf = h => h.platform || (/tiktok\.com/.test(h.postUrl || '') ? 'TikTok' : /instagram\.com/.test(h.postUrl || '') ? 'Instagram' : 'Other');
-  if (/^#(hooks|ideas|review|scheduled|posted)$/.test(location.hash)) state.view = location.hash.slice(1);
+  if (/^#(hooks|ideas|review|scheduled|posted|analysis)$/.test(location.hash)) state.view = location.hash.slice(1);
 
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -396,8 +424,9 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 
   function counts() {
     const by = s => state.posts.filter(p => p.stage === s).length;
-    const c = { hooks: state.hooks.length, ideas: by('idea'), review: by('review'), scheduled: by('scheduled'), posted: by('posted') };
-    document.querySelectorAll('[data-count]').forEach(el => (el.textContent = c[el.dataset.count] + (el.dataset.count === 'hooks' ? ' hooks' : ' posts')));
+    const ranked = (state.analysis?.posts || []).filter(r => r.views != null).length;
+    const c = { hooks: state.hooks.length, ideas: by('idea'), review: by('review'), scheduled: by('scheduled'), posted: by('posted'), analysis: ranked };
+    document.querySelectorAll('[data-count]').forEach(el => (el.textContent = c[el.dataset.count] + (el.dataset.count === 'hooks' ? ' hooks' : el.dataset.count === 'analysis' ? ' ranked' : ' posts')));
     document.querySelectorAll('.pipeline button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.view === state.view)));
   }
 
@@ -416,6 +445,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (state.view === 'ideas') v.innerHTML = renderStage('idea');
     else if (state.view === 'review') v.innerHTML = renderStage('review');
     else if (state.view === 'posted') v.innerHTML = renderPosted();
+    else if (state.view === 'analysis') v.innerHTML = renderAnalysis();
     else v.innerHTML = renderScheduled();
   }
 
@@ -887,6 +917,61 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     }).join('')}</div>`;
   }
 
+  // ── Analysis: TikTok stats per post, ranked ──────────────────────────
+  // Claude writes analysis/tiktok: { status, checkedAt, account, channel, posts: [{ postId, ref, postizId, views, likes, comments, shares, saves, linked, url }] }
+  const RANK_BY = [['views', 'Views'], ['likes', 'Likes'], ['saves', 'Saves'], ['comments', 'Comments'], ['shares', 'Shares'], ['eng', 'Engagement rate']];
+  const engOf = r => r.views ? ((r.likes || 0) + (r.comments || 0) + (r.shares || 0) + (r.saves || 0)) / r.views : null;
+  function renderAnalysis() {
+    const a = state.analysis || {};
+    const busy = ['queued', 'working'].includes(a.status);
+    const fmt = d => new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const statusLine = a.status === 'queued' ? 'Waiting for Claude…' : a.status === 'working' ? (a.detail || 'Claude is checking the account…')
+      : a.status === 'error' ? (a.error || 'The check failed') : a.checkedAt ? `Last checked ${fmt(a.checkedAt)}` : 'Not checked yet';
+    const by = state.rankBy || 'views';
+    const key = r => by === 'eng' ? engOf(r) : r[by];
+    const rows = (a.posts || []).filter(r => r.views != null).map(r => ({ ...r, post: state.posts.find(p => p.id === r.postId) }))
+      .sort((x, y) => (key(y) ?? -1) - (key(x) ?? -1));
+    const unlinked = (a.posts || []).filter(r => r.views == null);
+    const acc = a.account || {}, ch = a.channel || {};
+    const tile = (label, v, sub) => `<div class="an-tile"><div class="an-k">${esc(label)}</div><div class="an-v">${v == null ? '—' : esc(fmtN(v))}</div>${sub ? `<div class="an-sub">${esc(sub)}</div>` : ''}</div>`;
+    const pct = v => v == null ? '—' : (v * 100).toFixed(1) + '%';
+    const rowHtml = (r, i) => {
+      const p = r.post || {}; const src = p.slides?.[0] ? thumbOf(p.slides[0]) : '';
+      return `<li class="an-row">
+        <span class="an-rank">${i + 1}</span>
+        ${src ? `<button type="button" class="an-thumb" data-lb="${esc(p.id)}" data-i="0" aria-label="Open the slides of ${esc(r.ref || p.ref || '')}"><img src="${esc(src)}" data-full="${esc(p.slides[0])}" alt="Slide 1 of ${esc(r.ref || '')}" loading="lazy"></button>` : '<div class="an-thumb empty">No image</div>'}
+        <div class="an-main"><div class="an-ref"><span class="ref-id">${esc(r.ref || p.ref || '')}</span>${p.subject ? ` <span class="k">${esc(p.subject)}</span>` : ''}</div>
+          <p class="cover">${esc(p.cover || r.hook || '')}</p>${p.title ? `<div class="k">${esc(p.title)}</div>` : ''}
+          ${r.url ? `<a class="k" href="${esc(r.url)}" target="_blank" rel="noopener">open on TikTok</a>` : ''}</div>
+        <dl class="an-stats">${RANK_BY.map(([k, l]) => `<div class="${k === by ? 'on' : ''}"><dt>${l === 'Engagement rate' ? 'Eng.' : l}</dt><dd>${k === 'eng' ? pct(engOf(r)) : fmtN(r[k])}</dd></div>`).join('')}</dl>
+      </li>`;
+    };
+    return `<section class="an">
+      <div class="an-head">
+        <div><h2>TikTok performance</h2><div class="k">@overture.alarm.app · ${esc(statusLine)}</div></div>
+        <button class="btn primary" type="button" data-analysis-check ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Checking…' : 'Check TikTok stats'}</button>
+      </div>
+      <div class="an-tiles">
+        ${tile('Followers', acc.followers)}${tile('Total likes', acc.likes)}${tile('Videos', acc.videos)}
+        ${tile('Views', ch.views, ch.days ? `last ${ch.days} days` : '')}${tile('Likes', ch.likes, ch.days ? `last ${ch.days} days` : '')}${tile('Comments', ch.comments, ch.days ? `last ${ch.days} days` : '')}
+      </div>
+      ${a.note ? `<p class="an-note">${esc(a.note)}</p>` : ''}
+      <div class="an-bar"><label for="an-sort">Rank by</label>
+        <select id="an-sort">${RANK_BY.map(([k, l]) => `<option value="${k}" ${k === by ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <span class="k">${rows.length} post${rows.length === 1 ? '' : 's'} with stats, most to least popular</span></div>
+      ${rows.length ? `<ol class="an-list">${rows.map(rowHtml).join('')}</ol>` : `<div class="empty-state">${a.checkedAt ? 'No post stats yet.' : 'Press "Check TikTok stats" to rank the posts.'}</div>`}
+      ${unlinked.length ? `<details class="an-unlinked"><summary>${unlinked.length} published post${unlinked.length === 1 ? '' : 's'} without stats</summary>
+        <p class="k">Postiz can't read these yet: open each one in Postiz, go to its statistics & link it to the TikTok video, then check again.</p>
+        <ul>${unlinked.map(r => { const p = state.posts.find(x => x.id === r.postId) || {}; return `<li><span class="ref-id">${esc(r.ref || p.ref || '')}</span> ${esc(p.cover || r.hook || '')}${r.previewUrl ? ` · <a href="${esc(r.previewUrl)}" target="_blank" rel="noopener">open in Postiz</a>` : ''}</li>`; }).join('')}</ul></details>` : ''}
+    </section>`;
+  }
+  async function requestAnalysis(el) {
+    const pinged = pingClaude(el, 'Overture engine request: check the Overture TikTok account (@overture.alarm.app) for views, likes, saves & comments, & rank the posts (Analysis tab). Follow the Overture processing-runbook.md (Analysis).');
+    try { await db.doc('analysis/tiktok').set({ ...(state.analysis || {}), status: 'queued', requestedAt: new Date().toISOString(), error: null }); }
+    catch (e) { toast('Could not save: ' + (e?.message || e?.code)); return; }
+    toast((await pinged) ? 'Queued: Claude will check the TikTok stats' : 'Queued. Claude was not notified automatically, so tell Claude "check TikTok stats"');
+  }
+
   // ── Events ───────────────────────────────────────────────────────────
   const view = $('#view');
   view.addEventListener('input', e => {
@@ -899,6 +984,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   view.addEventListener('change', async e => {
     const t = e.target;
     if (t.id === 'hook-status') { state.status = t.value; render(); }
+    if (t.id === 'an-sort') { state.rankBy = t.value; render(); $('#an-sort')?.focus(); }
     if (t.id === 'hook-platform') { state.platform = t.value; try { localStorage.setItem('oce-platform', t.value); } catch (e) {} render(); }
     if (t.dataset.editCaption) await patchPost(t.dataset.editCaption, { caption: t.value });
     if (t.dataset.editTitle) await patchPost(t.dataset.editTitle, { title: t.value.trim() });
@@ -919,6 +1005,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (t.dataset.step) { const p = state.posts.find(x => x.id === t.dataset.step); slideIdx[p.id] = Math.max(0, Math.min(p.slides.length - 1, (slideIdx[p.id] || 0) + +t.dataset.dir)); render(); view.querySelector(`[data-step="${CSS.escape(p.id)}"][data-dir="${t.dataset.dir}"]`)?.focus(); }
     else if (t.dataset.copyText) { const p = state.posts.find(x => x.id === t.dataset.copyText); toast(await copyText(p.overlays[+t.dataset.i].text) ? `Slide ${+t.dataset.i + 1} text copied` : 'Could not copy: select the text and copy it by hand'); }
     else if (t.dataset.prompt) { const p = state.posts.find(x => x.id === t.dataset.prompt); if (p) openPrompt(p); }
+    else if ('analysisCheck' in t.dataset) await requestAnalysis(t);
     else if (t.dataset.redoOpen) {
       const id = t.dataset.redoOpen;
       state.redo = state.redo?.id === id ? null : { id, kind: 'slides', text: '' };
@@ -1158,6 +1245,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
       e => setStatus('The hook library stopped updating (' + e.code + '). Reload the page.', 'bad'));
     db.collection('posts').onSnapshot(s => { state.posts = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); done(); },
       e => setStatus('The week plan stopped updating (' + e.code + '). Reload the page.', 'bad'));
+    db.collection('analysis').onSnapshot(s => { const d = s.docs.find(x => x.id === 'tiktok'); state.analysis = d ? d.data() : null; render(); }, () => {});
   })();
 })();
 </script>

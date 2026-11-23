@@ -397,6 +397,32 @@ with a plain `schedule.error` and stop.
    Then write `schedule.status: "sent"`, `postizId`, `previewUrl` (from the
    tool's result), `sentAt`, and `step: "schedule"`.
 
+## Analysis (TikTok stats & ranking)
+
+Triggered by **Check TikTok stats** on the Analysis tab. Status & results live in
+`analysis/tiktok`: `{ status, detail, error, checkedAt, account, channel, posts, note }`.
+
+1. Set `status: "working"` with a short `detail`.
+2. Account totals: run `node content-engine/scripts/tiktok_profile_stats.js
+   https://www.tiktok.com/@overture.alarm.app <dir>` or read the profile page's
+   header; save `account: { followers, following, likes, videos }`. (From this
+   cloud browser TikTok returns the profile header but an empty video list, so
+   per-video numbers come from Postiz. Don't try to get round TikTok's bot
+   checks.)
+3. Channel totals: Postiz `integrationAnalyticsTool` on the channel, 30 days →
+   `channel: { days: 30, views, likes, comments, shares }`.
+4. Per post: for every post with `schedule.postizId`, call Postiz
+   `postAnalyticsTool` (30 days). Linked posts give views, likes, comments &
+   shares; write them to `posts[]` (`{ ref, postId, postizId, views, likes,
+   comments, shares, saves: null, linked: true, previewUrl }`) & also to that
+   post's `stats` so its card shows them. Posts Postiz hasn't linked to their
+   TikTok video come back with an error: list them with `views: null,
+   linked: false` so the tab tells Charlie to link them in Postiz.
+5. Saves aren't available through Postiz: keep `saves: null` unless Charlie
+   gives the numbers (TikTok Studio shows them).
+6. Write a one-line `note` on what was & wasn't covered, set `status: "done"`,
+   `checkedAt`, & reply to the comment with the top post & how many were ranked.
+
 ## Check views
 
 Read the post's public TikTok page and record `stats`
