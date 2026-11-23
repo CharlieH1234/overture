@@ -257,6 +257,8 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 .an-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .an-thumb.empty { display: grid; place-items: center; font-size: 11px; color: var(--muted); background: var(--surface-2); }
 .an-main .cover { margin: 4px 0 2px; }
+.an-tag { font: 500 11px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+.an-thumb { aspect-ratio: 3 / 4; }
 .an-stats { display: grid; grid-template-columns: repeat(3, minmax(70px, auto)); gap: 4px 14px; margin: 0; }
 .an-stats div { text-align: right; }
 .an-stats dt { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
@@ -424,7 +426,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 
   function counts() {
     const by = s => state.posts.filter(p => p.stage === s).length;
-    const ranked = (state.analysis?.posts || []).filter(r => r.views != null).length;
+    const ranked = ((state.analysis?.videos?.length ? state.analysis.videos : state.analysis?.posts) || []).filter(r => r.views != null).length;
     const c = { hooks: state.hooks.length, ideas: by('idea'), review: by('review'), scheduled: by('scheduled'), posted: by('posted'), analysis: ranked };
     document.querySelectorAll('[data-count]').forEach(el => (el.textContent = c[el.dataset.count] + (el.dataset.count === 'hooks' ? ' hooks' : el.dataset.count === 'analysis' ? ' ranked' : ' posts')));
     document.querySelectorAll('.pipeline button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.view === state.view)));
@@ -929,19 +931,22 @@ button.step:disabled { opacity: 0.35; cursor: default; }
       : a.status === 'error' ? (a.error || 'The check failed') : a.checkedAt ? `Last checked ${fmt(a.checkedAt)}` : 'Not checked yet';
     const by = state.rankBy || 'views';
     const key = r => by === 'eng' ? engOf(r) : r[by];
-    const rows = (a.posts || []).filter(r => r.views != null).map(r => ({ ...r, post: state.posts.find(p => p.id === r.postId) }))
+    // a.videos (every video on the account, e.g. from the operator's screenshots) wins over a.posts (engine posts only)
+    const source = a.videos?.length ? a.videos : (a.posts || []);
+    const rows = source.filter(r => r.views != null).map(r => ({ ...r, post: state.posts.find(p => p.id === r.postId) }))
       .sort((x, y) => (key(y) ?? -1) - (key(x) ?? -1));
-    const unlinked = (a.posts || []).filter(r => r.views == null);
+    const unlinked = (a.posts || []).filter(r => r.likes == null);
     const acc = a.account || {}, ch = a.channel || {};
     const tile = (label, v, sub) => `<div class="an-tile"><div class="an-k">${esc(label)}</div><div class="an-v">${v == null ? '—' : esc(fmtN(v))}</div>${sub ? `<div class="an-sub">${esc(sub)}</div>` : ''}</div>`;
     const pct = v => v == null ? '—' : (v * 100).toFixed(1) + '%';
     const rowHtml = (r, i) => {
-      const p = r.post || {}; const src = p.slides?.[0] ? thumbOf(p.slides[0]) : '';
+      const p = r.post || {}; const src = r.thumb || (p.slides?.[0] ? thumbOf(p.slides[0]) : '');
+      const ref = r.ref || p.ref || '';
       return `<li class="an-row">
         <span class="an-rank">${i + 1}</span>
-        ${src ? `<button type="button" class="an-thumb" data-lb="${esc(p.id)}" data-i="0" aria-label="Open the slides of ${esc(r.ref || p.ref || '')}"><img src="${esc(src)}" data-full="${esc(p.slides[0])}" alt="Slide 1 of ${esc(r.ref || '')}" loading="lazy"></button>` : '<div class="an-thumb empty">No image</div>'}
-        <div class="an-main"><div class="an-ref"><span class="ref-id">${esc(r.ref || p.ref || '')}</span>${p.subject ? ` <span class="k">${esc(p.subject)}</span>` : ''}</div>
-          <p class="cover">${esc(p.cover || r.hook || '')}</p>${p.title ? `<div class="k">${esc(p.title)}</div>` : ''}
+        ${src ? `<button type="button" class="an-thumb" data-an-img="${esc(src)}" data-an-label="${esc(ref || r.hook || '')}" aria-label="Open the cover of ${esc(ref || r.hook || 'this video')} larger"><img src="${esc(src)}" alt="Cover: ${esc(r.hook || p.cover || '')}" loading="lazy"></button>` : '<div class="an-thumb empty">No image</div>'}
+        <div class="an-main"><div class="an-ref">${ref ? `<span class="ref-id">${esc(ref)}</span>` : '<span class="an-tag">not from the engine</span>'}${r.pinned ? ' <span class="an-tag">pinned</span>' : ''}${p.subject ? ` <span class="k">${esc(p.subject)}</span>` : r.piece ? ` <span class="k">${esc(r.piece)}</span>` : ''}</div>
+          <p class="cover">${esc(r.hook || p.cover || '')}</p>${p.title ? `<div class="k">${esc(p.title)}</div>` : ''}
           ${r.url ? `<a class="k" href="${esc(r.url)}" target="_blank" rel="noopener">open on TikTok</a>` : ''}</div>
         <dl class="an-stats">${RANK_BY.map(([k, l]) => `<div class="${k === by ? 'on' : ''}"><dt>${l === 'Engagement rate' ? 'Eng.' : l}</dt><dd>${k === 'eng' ? pct(engOf(r)) : fmtN(r[k])}</dd></div>`).join('')}</dl>
       </li>`;
@@ -960,8 +965,8 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <select id="an-sort">${RANK_BY.map(([k, l]) => `<option value="${k}" ${k === by ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <span class="k">${rows.length} post${rows.length === 1 ? '' : 's'} with stats, most to least popular</span></div>
       ${rows.length ? `<ol class="an-list">${rows.map(rowHtml).join('')}</ol>` : `<div class="empty-state">${a.checkedAt ? 'No post stats yet.' : 'Press "Check TikTok stats" to rank the posts.'}</div>`}
-      ${unlinked.length ? `<details class="an-unlinked"><summary>${unlinked.length} published post${unlinked.length === 1 ? '' : 's'} without stats</summary>
-        <p class="k">Postiz can't read these yet: open each one in Postiz, go to its statistics & link it to the TikTok video, then check again.</p>
+      ${unlinked.length ? `<details class="an-unlinked"><summary>${unlinked.length} engine post${unlinked.length === 1 ? '' : 's'} without likes or comments yet</summary>
+        <p class="k">${a.videos?.length ? 'Their views come from your screenshots. ' : ''}Postiz can't read their likes & comments yet: open each one in Postiz, go to its statistics & link it to the TikTok video, then check again.</p>
         <ul>${unlinked.map(r => { const p = state.posts.find(x => x.id === r.postId) || {}; return `<li><span class="ref-id">${esc(r.ref || p.ref || '')}</span> ${esc(p.cover || r.hook || '')}${r.previewUrl ? ` · <a href="${esc(r.previewUrl)}" target="_blank" rel="noopener">open in Postiz</a>` : ''}</li>`; }).join('')}</ul></details>` : ''}
     </section>`;
   }
@@ -1006,6 +1011,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (t.dataset.copyText) { const p = state.posts.find(x => x.id === t.dataset.copyText); toast(await copyText(p.overlays[+t.dataset.i].text) ? `Slide ${+t.dataset.i + 1} text copied` : 'Could not copy: select the text and copy it by hand'); }
     else if (t.dataset.prompt) { const p = state.posts.find(x => x.id === t.dataset.prompt); if (p) openPrompt(p); }
     else if ('analysisCheck' in t.dataset) await requestAnalysis(t);
+    else if (t.dataset.anImg) openLb([t.dataset.anImg], 0, 'TikTok cover', () => t.dataset.anLabel || 'TikTok cover');
     else if (t.dataset.redoOpen) {
       const id = t.dataset.redoOpen;
       state.redo = state.redo?.id === id ? null : { id, kind: 'slides', text: '' };

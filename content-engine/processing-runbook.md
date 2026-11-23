@@ -418,9 +418,16 @@ Triggered by **Check TikTok stats** on the Analysis tab. Status & results live i
    post's `stats` so its card shows them. Posts Postiz hasn't linked to their
    TikTok video come back with an error: list them with `views: null,
    linked: false` so the tab tells Charlie to link them in Postiz.
-5. Saves aren't available through Postiz: keep `saves: null` unless Charlie
+5. **Screenshots from Charlie** (the profile grid with view counts): crop each
+   tile to `analysis-img/vNN.jpg` (publish with the page) & save every video in
+   `videos[]` as `{ n, hook, views, likes, comments, shares, saves, thumb, ref,
+   postId, pinned, piece, source }`, matching engine posts by their hook text
+   (`ref`/`postId`; null for videos posted outside the engine) & merging the
+   Postiz likes/comments/shares where linked. When `videos` exists the tab
+   ranks the whole account from it.
+6. Saves aren't available through Postiz: keep `saves: null` unless Charlie
    gives the numbers (TikTok Studio shows them).
-6. Write a one-line `note` on what was & wasn't covered, set `status: "done"`,
+7. Write a one-line `note` on what was & wasn't covered, set `status: "done"`,
    `checkedAt`, & reply to the comment with the top post & how many were ranked.
 
 ## Check views
