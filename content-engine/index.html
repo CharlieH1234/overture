@@ -257,6 +257,15 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 .an-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .an-thumb.empty { display: grid; place-items: center; font-size: 11px; color: var(--muted); background: var(--surface-2); }
 .an-main .cover { margin: 4px 0 2px; }
+.an-fchip { display: inline-block; font: 600 11px var(--sans); color: var(--info); background: var(--info-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.an-fmt { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.an-fmt h3 { margin: 0 0 8px; font: 600 15px var(--sans); }
+.an-fmt-scroll { overflow-x: auto; }
+.an-fmt table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.an-fmt th, .an-fmt td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.an-fmt th:first-child { text-align: left; }
+.an-fmt thead th { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.an-fmt p { margin: 8px 0 0; }
 .an-tag { font: 500 11px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
 .an-thumb { aspect-ratio: 3 / 4; }
 .an-stats { display: grid; grid-template-columns: repeat(3, minmax(70px, auto)); gap: 4px 14px; margin: 0; }
@@ -933,8 +942,23 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const key = r => by === 'eng' ? engOf(r) : r[by];
     // a.videos (every video on the account, e.g. from the operator's screenshots) wins over a.posts (engine posts only)
     const source = a.videos?.length ? a.videos : (a.posts || []);
-    const rows = source.filter(r => r.views != null).map(r => ({ ...r, post: state.posts.find(p => p.id === r.postId) }))
+    const withViews = source.filter(r => r.views != null);
+    const fmtSel = state.anFormat || 'all';
+    const rows = withViews.filter(r => fmtSel === 'all' || r.format === fmtSel).map(r => ({ ...r, post: state.posts.find(p => p.id === r.postId) }))
       .sort((x, y) => (key(y) ?? -1) - (key(x) ?? -1));
+    // Per-format averages, best average views first
+    const groups = {};
+    withViews.filter(r => r.format).forEach(r => (groups[r.format] = groups[r.format] || []).push(r));
+    const sum = (L, k) => L.reduce((s, r) => s + (r[k] || 0), 0);
+    const fmtRows = Object.entries(groups).map(([f, L]) => {
+      const v = sum(L, 'views'), known = L.filter(r => r.likes != null), kv = sum(known, 'views');
+      const act = sum(known, 'likes') + sum(known, 'comments') + sum(known, 'shares') + sum(known, 'saves');
+      return { f, n: L.length, avg: v / L.length, eng: kv ? act / kv : null, saves: known.length ? sum(known, 'saves') : null, likes: known.length ? sum(known, 'likes') : null };
+    }).sort((x, y) => y.avg - x.avg);
+    const formatTable = fmtRows.length ? `<div class="an-fmt"><h3>By format</h3><div class="an-fmt-scroll"><table>
+        <thead><tr><th scope="col">Format</th><th scope="col">Videos</th><th scope="col">Avg views</th><th scope="col">Engagement</th><th scope="col">Likes</th><th scope="col">Saves</th></tr></thead>
+        <tbody>${fmtRows.map(g => `<tr><th scope="row"><span class="an-fchip" title="${esc(a.formats?.[g.f] || '')}">${esc(g.f)}</span></th><td>${g.n}</td><td>${fmtN(Math.round(g.avg))}</td><td>${g.eng == null ? '—' : (g.eng * 100).toFixed(1) + '%'}</td><td>${fmtN(g.likes)}</td><td>${fmtN(g.saves)}</td></tr>`).join('')}</tbody>
+      </table></div><p class="k">Small numbers: treat these as early signals.${a.formats ? ' Hover a format for its definition.' : ''}</p></div>` : '';
     const unlinked = (a.posts || []).filter(r => r.likes == null);
     const acc = a.account || {}, ch = a.channel || {};
     const tile = (label, v, sub) => `<div class="an-tile"><div class="an-k">${esc(label)}</div><div class="an-v">${v == null ? '—' : esc(fmtN(v))}</div>${sub ? `<div class="an-sub">${esc(sub)}</div>` : ''}</div>`;
@@ -945,7 +969,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
       return `<li class="an-row">
         <span class="an-rank">${i + 1}</span>
         ${src ? `<button type="button" class="an-thumb" data-an-img="${esc(src)}" data-an-label="${esc(ref || r.hook || '')}" aria-label="Open the cover of ${esc(ref || r.hook || 'this video')} larger"><img src="${esc(src)}" alt="Cover: ${esc(r.hook || p.cover || '')}" loading="lazy"></button>` : '<div class="an-thumb empty">No image</div>'}
-        <div class="an-main"><div class="an-ref">${ref ? `<span class="ref-id">${esc(ref)}</span>` : '<span class="an-tag">not from the engine</span>'}${r.pinned ? ' <span class="an-tag">pinned</span>' : ''}${p.subject ? ` <span class="k">${esc(p.subject)}</span>` : r.piece ? ` <span class="k">${esc(r.piece)}</span>` : ''}</div>
+        <div class="an-main"><div class="an-ref">${r.format ? `<span class="an-fchip" title="${esc(a.formats?.[r.format] || '')}">${esc(r.format)}</span> ` : ''}${ref ? `<span class="ref-id">${esc(ref)}</span>` : '<span class="an-tag">not from the engine</span>'}${r.pinned ? ' <span class="an-tag">pinned</span>' : ''}${p.subject ? ` <span class="k">${esc(p.subject)}</span>` : r.piece ? ` <span class="k">${esc(r.piece)}</span>` : ''}</div>
           <p class="cover">${esc(r.hook || p.cover || '')}</p>${p.title ? `<div class="k">${esc(p.title)}</div>` : ''}
           ${r.url ? `<a class="k" href="${esc(r.url)}" target="_blank" rel="noopener">open on TikTok</a>` : ''}</div>
         <dl class="an-stats">${RANK_BY.map(([k, l]) => `<div class="${k === by ? 'on' : ''}"><dt>${l === 'Engagement rate' ? 'Eng.' : l}</dt><dd>${k === 'eng' ? pct(engOf(r)) : fmtN(r[k])}</dd></div>`).join('')}</dl>
@@ -961,8 +985,10 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         ${tile('Views', ch.views, ch.days ? `last ${ch.days} days` : '')}${tile('Likes', ch.likes, ch.days ? `last ${ch.days} days` : '')}${tile('Comments', ch.comments, ch.days ? `last ${ch.days} days` : '')}
       </div>
       ${a.note ? `<p class="an-note">${esc(a.note)}</p>` : ''}
+      ${formatTable}
       <div class="an-bar"><label for="an-sort">Rank by</label>
         <select id="an-sort">${RANK_BY.map(([k, l]) => `<option value="${k}" ${k === by ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        ${fmtRows.length ? `<label for="an-format">Format</label><select id="an-format"><option value="all">All formats</option>${fmtRows.map(g => `<option value="${esc(g.f)}" ${g.f === fmtSel ? 'selected' : ''}>${esc(g.f)}</option>`).join('')}</select>` : ''}
         <span class="k">${rows.length} post${rows.length === 1 ? '' : 's'} with stats, most to least popular</span></div>
       ${rows.length ? `<ol class="an-list">${rows.map(rowHtml).join('')}</ol>` : `<div class="empty-state">${a.checkedAt ? 'No post stats yet.' : 'Press "Check TikTok stats" to rank the posts.'}</div>`}
       ${unlinked.length ? `<details class="an-unlinked"><summary>${unlinked.length} engine post${unlinked.length === 1 ? '' : 's'} without likes or comments yet</summary>
@@ -990,6 +1016,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const t = e.target;
     if (t.id === 'hook-status') { state.status = t.value; render(); }
     if (t.id === 'an-sort') { state.rankBy = t.value; render(); $('#an-sort')?.focus(); }
+    if (t.id === 'an-format') { state.anFormat = t.value; render(); $('#an-format')?.focus(); }
     if (t.id === 'hook-platform') { state.platform = t.value; try { localStorage.setItem('oce-platform', t.value); } catch (e) {} render(); }
     if (t.dataset.editCaption) await patchPost(t.dataset.editCaption, { caption: t.value });
     if (t.dataset.editTitle) await patchPost(t.dataset.editTitle, { title: t.value.trim() });

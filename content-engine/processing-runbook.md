@@ -425,9 +425,16 @@ Triggered by **Check TikTok stats** on the Analysis tab. Status & results live i
    (`ref`/`postId`; null for videos posted outside the engine) & merging the
    Postiz likes/comments/shares where linked. When `videos` exists the tab
    ranks the whole account from it.
-6. Saves aren't available through Postiz: keep `saves: null` unless Charlie
+6. Tag every video with a `format` (shown as a chip & summarised in the
+   "By format" table): **Quad composition** (2–4 panels in one frame),
+   **Landscape** (a scenic view, photo or painting), **Bedroom scene** (a bed,
+   a sleeper or a morning bedroom), **Block colour** (a plain colour card with
+   one line), **Profile pic** (face-to-camera selfie), **App promo** (shows the
+   app or a download prompt), **Painted scene** (a classical painting of
+   people indoors). Add a new format to `formats` only if none fits.
+7. Saves aren't available through Postiz: keep `saves: null` unless Charlie
    gives the numbers (TikTok Studio shows them).
-7. Write a one-line `note` on what was & wasn't covered, set `status: "done"`,
+8. Write a one-line `note` on what was & wasn't covered, set `status: "done"`,
    `checkedAt`, & reply to the comment with the top post & how many were ranked.
 
 ## Check views
