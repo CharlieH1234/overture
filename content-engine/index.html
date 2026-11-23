@@ -765,10 +765,11 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <button class="btn danger${state.rejectArm === p.id ? ' armed' : ''}" type="button" data-reject="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'} title="Removes this post from the week plan. Its hook stays in the library.">${state.rejectArm === p.id ? 'Confirm reject' : 'Reject'}</button>
         ${['hook', 'slides', 'caption'].map(kind => {
           const r = p.reimagine?.[kind];
-          const busy = r && (r.status === 'queued' || r.status === 'working');
+          const busy = isBusy(r), stale = isStale(r);
           return `<button class="btn" type="button" data-reimagine="${kind}" data-id="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Reimagining…' : kind === 'hook' ? 'Reimagine hook' : kind === 'slides' ? 'Reimagine slides' : 'Reimagine caption'}</button>
-            ${r ? `<span class="rstate ${r.status === 'error' ? 'bad' : r.status === 'done' ? 'good' : ''}">${esc(
-              r.status === 'queued' ? 'Waiting for Claude…'
+            ${r ? `<span class="rstate ${r.status === 'error' || stale ? 'bad' : r.status === 'done' ? 'good' : ''}">${esc(
+              stale ? STALE_NOTE
+              : r.status === 'queued' ? 'Waiting for Claude…'
               : r.status === 'working' ? (r.detail || 'Claude is working on it…')
               : r.status === 'error' ? (r.error || 'Failed')
               : kind === 'hook' ? 'Overture hook ready' : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}${r?.direction ? `<span class="rdir">Your edits: “${esc(r.direction)}”</span>` : ''}${kind === 'slides' ? promptLine(p) : ''}`;
@@ -841,12 +842,26 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     }
   });
 
+  // A request Claude never picked up (the page's message didn't arrive, or the work stopped) frees its button again:
+  // waiting over 15 minutes, or "working" over 60, counts as stale
+  const ageMin = r => r?.requestedAt ? (Date.now() - Date.parse(r.requestedAt)) / 60000 : 0;
+  const isStale = r => !!r && ((r.status === 'queued' && ageMin(r) > 15) || (r.status === 'working' && ageMin(r) > 60));
+  const isBusy = r => !!r && (r.status === 'queued' || r.status === 'working') && !isStale(r);
+  const STALE_NOTE = 'Not picked up by Claude. Press again, or tell Claude in chat';
+  // Re-check once a minute so a waiting request turns stale without a reload (skipped while typing or on the hook library)
+  setInterval(() => {
+    const a = document.activeElement;
+    if (state.view === 'hooks' || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+    const waiting = state.posts.some(p => Object.values(p.reimagine || {}).some(r => r?.status === 'queued' || r?.status === 'working')) || ['queued', 'working'].includes(state.analysis?.status);
+    if (waiting) render();
+  }, 60000);
+
   // Shown while the caption or title is missing: asks Claude to write both (same flow as Reimagine caption)
   function captionBtn(p) {
     if (p.caption?.trim() && p.title?.trim()) return '';
     const r = p.reimagine?.caption;
-    const busy = r && (r.status === 'queued' || r.status === 'working');
-    const note = !r ? '' : r.status === 'queued' ? 'Waiting for Claude…' : r.status === 'working' ? (r.detail || 'Claude is writing it…') : r.status === 'error' ? (r.error || 'Failed') : '';
+    const busy = isBusy(r);
+    const note = !r ? '' : isStale(r) ? STALE_NOTE : r.status === 'queued' ? 'Waiting for Claude…' : r.status === 'working' ? (r.detail || 'Claude is writing it…') : r.status === 'error' ? (r.error || 'Failed') : '';
     return `<div class="caption-create"><button class="btn primary" type="button" data-create-caption="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Writing caption…' : 'Create caption'}</button>${note ? `<span class="rstate ${r.status === 'error' ? 'bad' : ''}">${esc(note)}</span>` : ''}</div>`;
   }
 
@@ -929,7 +944,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
           <div class="result good">Posted${s.channel ? ` · ${esc(s.channel)}` : ''}${chanOf(p)?.handle ? ` (${esc(chanOf(p).handle)})` : ''}${s.previewUrl ? ` · <a href="${esc(s.previewUrl)}" target="_blank" rel="noopener">open in Postiz</a>` : ''}</div>
           ${viewsBlock(p)}
         </div>
-        <div class="actions"><button class="btn primary" type="button" data-check-views="${esc(p.id)}" ${state.canWrite && !['queued', 'working'].includes(p.stats?.status) ? '' : 'disabled'}>${['queued', 'working'].includes(p.stats?.status) ? 'Checking views…' : 'Check views'}</button><button class="btn" type="button" data-tt="${esc(p.id)}">Preview on TikTok</button><button class="btn link" type="button" data-unpost="${esc(p.id)}" ${state.canWrite ? '' : 'disabled'}>Back to scheduled</button></div>
+        <div class="actions"><button class="btn primary" type="button" data-check-views="${esc(p.id)}" ${state.canWrite && !isBusy(p.stats) ? '' : 'disabled'}>${isBusy(p.stats) ? 'Checking views…' : 'Check views'}</button><button class="btn" type="button" data-tt="${esc(p.id)}">Preview on TikTok</button><button class="btn link" type="button" data-unpost="${esc(p.id)}" ${state.canWrite ? '' : 'disabled'}>Back to scheduled</button></div>
       </article>`;
     }).join('')}</div>`;
   }
@@ -940,9 +955,9 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   const engOf = r => r.views ? ((r.likes || 0) + (r.comments || 0) + (r.shares || 0) + (r.saves || 0)) / r.views : null;
   function renderAnalysis() {
     const a = state.analysis || {};
-    const busy = ['queued', 'working'].includes(a.status);
+    const busy = isBusy(a);
     const fmt = d => new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    const statusLine = a.status === 'queued' ? 'Waiting for Claude…' : a.status === 'working' ? (a.detail || 'Claude is checking the account…')
+    const statusLine = isStale(a) ? STALE_NOTE : a.status === 'queued' ? 'Waiting for Claude…' : a.status === 'working' ? (a.detail || 'Claude is checking the account…')
       : a.status === 'error' ? (a.error || 'The check failed') : a.checkedAt ? `Last checked ${fmt(a.checkedAt)}` : 'Not checked yet';
     const by = state.rankBy || 'views';
     const key = r => by === 'eng' ? engOf(r) : r[by];
