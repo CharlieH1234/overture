@@ -432,6 +432,12 @@ Triggered by **Check TikTok stats** on the Analysis tab. Status & results live i
    one line), **Profile pic** (face-to-camera selfie), **App promo** (shows the
    app or a download prompt), **Painted scene** (a classical painting of
    people indoors). Add a new format to `formats` only if none fits.
+   Also tag a `hookType`: **Perfect alarm label** ("the perfect classical
+   alarm?"), **Rebuttal** (a quoted put-down the music answers), **Transformation
+   story** ("I changed my alarm & now…"), **How-to / formula**, **Series pick**
+   ("…you need as your alarm, Part N"), **POV moment** ("when my alarm goes
+   off…", "the fact I wake up to this"), **Swap (not a beep)** (names the piece
+   as the beep's replacement). Definitions live in `hookTypes`.
 7. Saves aren't available through Postiz: keep `saves: null` unless Charlie
    gives the numbers (TikTok Studio shows them).
 8. Write a one-line `note` on what was & wasn't covered, set `status: "done"`,
