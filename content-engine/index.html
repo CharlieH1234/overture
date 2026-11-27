@@ -179,7 +179,16 @@ select.status-filter { padding: 9px 10px; border: 1px solid var(--line); border-
 /* Review: the text column runs to the card's right edge; the buttons sit in a bar along the bottom */
 .card.review { grid-template-columns: 76px auto minmax(0, 1fr); }
 .card.review .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.media-col { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.media-col .thumbs { overflow-x: auto; }
+.vid { display: grid; gap: 6px; justify-items: start; }
+.vid video { width: 100%; max-width: 220px; aspect-ratio: 9 / 16; border-radius: 8px; background: #000; display: block; }
+.vid-meta { font: 12px var(--mono); color: var(--muted); }
+.vid-use { font-size: 13px; display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.vid .rstate { text-align: left; }
 @media (max-width: 760px) {
+  .card.review .media-col { grid-column: 2; grid-row: 1; min-width: 0; }
+  .card.review .media-col .thumbs { grid-column: auto; grid-row: auto; }
   .card.review { grid-template-columns: 64px minmax(0, 1fr); }
   .card.review .actions { justify-content: stretch; }
   .card.review .actions .btn { flex: 1 1 auto; }
@@ -880,6 +889,23 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     return `<div class="caption-create"><button class="btn primary" type="button" data-create-caption="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Writing caption…' : 'Create caption'}</button>${note ? `<span class="rstate ${r.status === 'error' ? 'bad' : ''}">${esc(note)}</span>` : ''}</div>`;
   }
 
+  // "Create video": Claude draws the slides with their text into one MP4 (a dissolve between slides, about 2.5 s each).
+  // Once it's made, "Post as video" (on by default) makes Approve 2 send the video instead of the photos.
+  const videoReady = p => p.video?.status === 'done' && !!p.video.src;
+  const postsVideo = p => videoReady(p) && p.postAs !== 'photos';
+  function videoBox(p) {
+    if (!p.slides?.length) return '';
+    const v = p.video, busy = isBusy(v), stale = isStale(v), ready = videoReady(p);
+    const note = !v ? '' : stale ? STALE_NOTE : v.status === 'queued' ? 'Waiting for Claude…' : v.status === 'working' ? (v.detail || 'Claude is making the video…') : v.status === 'error' ? (v.error || 'Failed') : '';
+    return `<div class="vid">
+      ${ready ? `<video src="${esc(v.src)}"${v.poster ? ` poster="${esc(v.poster)}"` : ''} controls playsinline preload="none" aria-label="Slideshow video of ${esc(p.ref || '')}"></video>
+        <div class="vid-meta">${v.seconds ? `${esc(v.seconds)} s · ` : ''}${esc(v.slides || p.slides.length)} slides · dissolve</div>
+        <label class="vid-use"><input type="checkbox" data-post-as="${esc(p.id)}" ${p.postAs !== 'photos' ? 'checked' : ''} ${state.canWrite ? '' : 'disabled'}> Post as video</label>` : ''}
+      <button class="btn" type="button" data-make-video="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Making video…' : ready ? 'Remake video' : 'Create video'}</button>
+      ${note ? `<span class="rstate ${v.status === 'error' || stale ? 'bad' : ''}">${esc(note)}</span>` : ''}
+    </div>`;
+  }
+
   function reviewCard(p) {
     const blockers = scheduleBlockers(p);
     const len = [...(p.caption || '')].length;
@@ -887,7 +913,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const res = p.lastError ? `<div class="result bad">${esc(p.lastError)}</div>` : '';
     return `<article class="card review">
       <div class="when"><span class="time">${esc(p.time)}</span>${p.ref ? `<span class="ref-id">${esc(p.ref)}</span>` : ""}<span class="persona">${esc(PERSONA_SHORT[p.persona] || p.persona)}</span></div>
-      ${thumbs(p)}
+      <div class="media-col">${thumbs(p)}${videoBox(p)}</div>
       <div class="body">
         ${hookLine(p)}
         <p class="cover">${esc(p.cover)}</p>
@@ -899,7 +925,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <div class="schedule-row">
           <div class="field"><label for="w-${esc(p.id)}">Send at (your local time)</label><input type="datetime-local" id="w-${esc(p.id)}" data-edit-when="${esc(p.id)}" value="${esc(at)}"></div>
         </div>
-        <div class="note" style="font-size:12px;color:var(--muted)">Approve 2 sends the text-free photos through Telegram to compress them, uploads them to Postiz and schedules the post at this time on the TikTok channel you pick${CHANNELS.length ? ': ' + esc(CHANNELS.map(c => c.name).join(' or ')) : ' (no Overture channel is set up yet)'}. Progress shows in the Scheduled tab. Postiz puts the photos in your TikTok inbox as a draft whose description starts with each slide's text (no labels), then the caption; paste the slide text onto the slides, delete it from the description, add a sound and publish.</div>
+        <div class="note" style="font-size:12px;color:var(--muted)">Approve 2 sends the text-free photos through Telegram to compress them, uploads them to Postiz and schedules the post at this time on the TikTok channel you pick${CHANNELS.length ? ': ' + esc(CHANNELS.map(c => c.name).join(' or ')) : ' (no Overture channel is set up yet)'}. Progress shows in the Scheduled tab. Postiz puts the photos in your TikTok inbox as a draft whose description starts with each slide's text (no labels), then the caption; paste the slide text onto the slides, delete it from the description, add a sound and publish. With "Post as video" on, the video (text already in it) goes instead; TikTok drops the description of video drafts, so the caption comes to Telegram to paste in.</div>
         ${blockers.length ? `<span class="blocker">${esc(blockers.join(' · '))}</span>` : ''}
         ${captionBtn(p)}
         ${res}
@@ -1066,6 +1092,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     if (t.dataset.editCaption) await patchPost(t.dataset.editCaption, { caption: t.value });
     if (t.dataset.editTitle) await patchPost(t.dataset.editTitle, { title: t.value.trim() });
     if (t.dataset.editWhen) await patchPost(t.dataset.editWhen, { scheduleAt: t.value });
+    if (t.dataset.postAs) await patchPost(t.dataset.postAs, { postAs: t.checked ? 'video' : 'photos' });
   });
   view.addEventListener('keydown', async e => {
     const t = e.target; if (!t.dataset?.editInput) return;
@@ -1138,11 +1165,17 @@ button.step:disabled { opacity: 0.35; cursor: default; }
       toast(sent ? 'Moved back to Review. Delete it in Postiz too, so it doesn\'t post twice' : 'Moved back to Review');
     }
     else if (t.dataset.addNew) await addPlanHookToLibrary(t.dataset.addNew);
+    else if (t.dataset.makeVideo) {
+      const p = state.posts.find(x => x.id === t.dataset.makeVideo);
+      const pinged = pingClaude(t, `Overture engine request: create the video of ${p.ref} (post ${p.id}): the slides with their text, a dissolve between slides, about 2.5 s each. Follow the Overture processing-runbook.md (Create video).`);
+      await patchPost(p.id, { video: { ...(p.video || {}), status: 'queued', requestedAt: new Date().toISOString(), error: null } });
+      toast((await pinged) ? 'Queued: Claude will make the video' : 'Queued. Claude was not notified automatically, so tell Claude "video ' + p.ref + '"');
+    }
     else if (t.dataset.approve2) {
       const p = state.posts.find(x => x.id === t.dataset.approve2);
       // Ping first, inside the click gesture; schedule() writes the queue entry Claude then reads
       const ch = CHANNELS.find(c => c.key === t.dataset.channel) || CHANNELS[0]; if (!ch) return;
-      const pinged = pingClaude(t, `Overture engine request: Approve 2 on ${p.ref} (post ${p.id}) to the ${ch.name} channel. Process it per the Overture processing-runbook.md.`);
+      const pinged = pingClaude(t, `Overture engine request: Approve 2 on ${p.ref} (post ${p.id}) to the ${ch.name} channel${postsVideo(p) ? ', posting the video (video.src) instead of the photos' : ''}. Process it per the Overture processing-runbook.md.`);
       const queued = await schedule(p.id, ch);
       if (queued && !(await pinged)) toast('Queued. Claude was not notified automatically, so tell Claude "approved ' + p.ref + '"');
     }
@@ -1220,8 +1253,8 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const title = view.querySelector(`[data-edit-title="${CSS.escape(id)}"]`)?.value.trim() ?? p.title;
     const now = new Date().toISOString();
     await patchPost(id, { caption, title, scheduleAt: local, stage: 'scheduled', lastError: null,
-      schedule: { destination: 'postiz', channel: ch.name, integrationId: ch.id, at: at.toISOString(), status: 'processing', step: 'queued', queuedAt: now, updatedAt: now } });
-    toast('Processing: Telegram compression, then Postiz');
+      schedule: { destination: 'postiz', channel: ch.name, integrationId: ch.id, at: at.toISOString(), media: postsVideo(p) ? 'video' : 'photos', status: 'processing', step: 'queued', queuedAt: now, updatedAt: now } });
+    toast(postsVideo(p) ? 'Processing the video: Telegram, then Postiz' : 'Processing: Telegram compression, then Postiz');
     return true;
   }
 

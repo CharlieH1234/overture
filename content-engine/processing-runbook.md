@@ -349,7 +349,48 @@ edits from me: "<direction>"", & the direction is also saved as
 - Keep `direction` on the status when you set it to `done`, so the card shows
   what was asked. Reply with one line on what changed.
 
+## Create video
+
+Triggered by **Create video** (or **Remake video**) under a Review card's
+thumbnails. Status field: `posts/<id>.video` = `{ status, requestedAt, detail,
+error, src, poster, seconds, slides, doneAt }`.
+
+1. Set `video.status: "working"`.
+2. Put the post's current slides (`img/<…>.jpg`, full size, in order) in a
+   folder as `slide1.jpg…`, and the post's `overlays` in `post.json`.
+3. Run `node content-engine/scripts/make_video.js <post.json> <folder>
+   <folder>/video.mp4` (defaults: 2.5 s per slide, 0.5 s dissolve between
+   slides). It draws each slide's text exactly as the page does (same CSS),
+   joins the frames with ffmpeg's `fade` crossfade, writes H.264 1080×1920 30 fps
+   with a silent audio track and **all metadata stripped**, plus a 270×480 poster
+   `video.jpg`. Look at a few frames before publishing.
+4. Publish it with the page as `vid/<post id>-vN.mp4` and `vid/<post id>-vN.jpg`
+   (new N each time; delete the previous version's files to stay under the
+   512-file limit), then write `video: { status: "done", src, poster, seconds,
+   slides, doneAt }`. Keep `requestedAt`.
+5. Reply in the thread: length, number of slides, that "Post as video" is on so
+   Approve 2 will send the video, and that it can be turned off to send photos.
+
+The text is burned into the video (Charlie asked for this for videos, 27 Nov);
+photo posts still keep their text off the images.
+
 ## Approve 2
+
+**Video posts:** if `schedule.media` is `"video"` (the card had a finished
+video with "Post as video" on), the steps change:
+1. **telegram**: download `video.src` to `<folder>/video.mp4`, run
+   `python3 -I content-engine/scripts/telegram_video.py <folder>` (sendVideo,
+   then downloads Telegram's copy as `video_tg.mp4`; under 20 MB only).
+2. **download**: check `video_tg.mp4` plays (`ffprobe`), 1080×1920, no tags.
+3. **upload**: `python3 -I content-engine/scripts/postiz_upload.py <folder> --video`.
+4. **schedule**: as for photos, with the one video path as the attachment and
+   `content` = the caption only (the slide text is in the video). Note: in
+   UPLOAD mode TikTok drops a video draft's description, so:
+5. **caption to Telegram**: run `telegram_slide_text.py` with
+   `{ref, title, scheduleAt, caption, video: true}`; it sends the header and the
+   caption to paste into the draft.
+The reply says the video is in the TikTok inbox at that time, the caption is in
+Telegram, then pick the sound, switch on the AI-generated label, publish.
 
 Channel: **Overture.alarm.app** (Postiz TikTok, integration id
 `cmwf7nvfk014kms076xqd8f1m`). Approve 2 writes `schedule` on the post with that

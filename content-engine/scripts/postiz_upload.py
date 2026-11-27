@@ -2,7 +2,8 @@
 """Upload a post's Telegram-processed slides to the Postiz media library.
 
 Usage:
-  python3 -I postiz_upload.py <post_dir>
+  python3 -I postiz_upload.py <post_dir>            # photo post: slide<N>_tg.jpg
+  python3 -I postiz_upload.py <post_dir> --video    # video post: video_tg.mp4
 
 Uploads <post_dir>/slide1_tg.jpg, slide2_tg.jpg, ... (the copies made by
 telegram_compress.py; plain slide<N>.jpg files are never uploaded) to
@@ -34,16 +35,16 @@ def die(msg):
     sys.exit(1)
 
 
-def upload(key, path):
+def upload(key, path, ctype='image/jpeg'):
     boundary = uuid.uuid4().hex
     with open(path, 'rb') as f:
         data = f.read()
     body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{os.path.basename(path)}"\r\n'
-            'Content-Type: image/jpeg\r\n\r\n').encode() + data + f'\r\n--{boundary}--\r\n'.encode()
+            f'Content-Type: {ctype}\r\n\r\n').encode() + data + f'\r\n--{boundary}--\r\n'.encode()
     req = urllib.request.Request(URL, data=body, headers={
         'Authorization': key, 'Content-Type': f'multipart/form-data; boundary={boundary}'})
     ctx = ssl.create_default_context(cafile=CA) if os.path.exists(CA) else ssl.create_default_context()
-    with urllib.request.urlopen(req, timeout=120, context=ctx) as r:
+    with urllib.request.urlopen(req, timeout=300, context=ctx) as r:
         res = json.load(r)
     if not res.get('id') or not res.get('path'):
         die(f'unexpected upload response for {os.path.basename(path)}: {json.dumps(res)[:200]}')
@@ -51,20 +52,25 @@ def upload(key, path):
 
 
 def main():
-    if len(sys.argv) != 2:
-        die('usage: postiz_upload.py <post_dir>')
-    post_dir = sys.argv[1]
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] != '--video'):
+        die('usage: postiz_upload.py <post_dir> [--video]')
+    post_dir, video = sys.argv[1], len(sys.argv) == 3
     key = os.environ.get('POSTIZ_API_KEY', '').strip()
     if not key:
         die('POSTIZ_API_KEY must be set in the environment')
-    files = sorted((f for f in os.listdir(post_dir) if f.startswith('slide') and f.endswith('_tg.jpg')),
-                   key=lambda f: int(f[5:].split('_')[0]))
-    if not files:
-        die(f'no slide<N>_tg.jpg files in {post_dir}: run telegram_compress.py first')
+    if video:
+        files = ['video_tg.mp4'] if os.path.exists(os.path.join(post_dir, 'video_tg.mp4')) else []
+        if not files:
+            die(f'no video_tg.mp4 in {post_dir}: run telegram_video.py first')
+    else:
+        files = sorted((f for f in os.listdir(post_dir) if f.startswith('slide') and f.endswith('_tg.jpg')),
+                       key=lambda f: int(f[5:].split('_')[0]))
+        if not files:
+            die(f'no slide<N>_tg.jpg files in {post_dir}: run telegram_compress.py first')
     media = []
     for name in files:
         try:
-            media.append(upload(key, os.path.join(post_dir, name)))
+            media.append(upload(key, os.path.join(post_dir, name), 'video/mp4' if video else 'image/jpeg'))
         except urllib.error.HTTPError as e:
             hint = ' (rate limit: about 30 calls an hour)' if e.code == 429 else ' (check POSTIZ_API_KEY)' if e.code in (401, 403) else ''
             die(f'Postiz returned HTTP {e.code} for {name}{hint}')
