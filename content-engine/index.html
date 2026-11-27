@@ -128,6 +128,7 @@ select.status-filter { padding: 9px 10px; border: 1px solid var(--line); border-
 .pill.flagged { background: var(--bad-soft); color: var(--bad); }
 .pill.new { background: var(--info-soft); color: var(--info); }
 .cat { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.cat.fmt { background: var(--accent-soft); color: var(--accent); border-color: transparent; cursor: pointer; font: inherit; font-size: 12px; }
 
 .add-form { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; display: grid; gap: 12px; }
 .add-form .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
@@ -422,7 +423,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   const PERSONA_SHORT = { flex: 'Test slot' };
   const HANDLE = 'overture.alarm.app';
 
-  const state = { view: 'ideas', hooks: [], posts: [], cat: 'All', status: 'all', platform: 'all', q: '', adding: false, canWrite: true, busy: {} };
+  const state = { view: 'ideas', hooks: [], posts: [], cat: 'All', status: 'all', platform: 'all', hookFormat: 'all', q: '', adding: false, canWrite: true, busy: {} };
   let db = null, comments = null;
 
   // Postiz TikTok channels an approved post can go to (one Approve 2 button each)
@@ -498,7 +499,8 @@ button.step:disabled { opacity: 0.35; cursor: default; }
       .filter(h => state.cat === 'All' || h.category === state.cat)
       .filter(h => state.platform === 'all' || platOf(h) === state.platform)
       .filter(h => state.status === 'all' || h.status === state.status)
-      .filter(h => !q || [h.text, h.sourceHook, h.evidence, h.note, h.id, h.ref].some(x => String(x || '').toLowerCase().includes(q)))
+      .filter(h => state.hookFormat === 'all' || (h.hookFormat || '') === state.hookFormat)
+      .filter(h => !q || [h.text, h.sourceHook, h.evidence, h.note, h.id, h.ref, h.hookFormat].some(x => String(x || '').toLowerCase().includes(q)))
       .sort((a, b) => (STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status)) || ((a.order ?? 1e9) - (b.order ?? 1e9)));
   }
 
@@ -508,6 +510,9 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     const plats = [...new Set(state.hooks.map(platOf))].sort((a, b) => PLATFORMS.indexOf(a) - PLATFORMS.indexOf(b));
     const np = p => state.hooks.filter(h => p === 'all' || platOf(h) === p).length;
     const list = filteredHooks();
+    // Hook formats (the hook's pattern, e.g. "Romanticise your mornings"), in the order they were added
+    const fmts = [...new Set(state.hooks.slice().sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9)).map(h => h.hookFormat).filter(Boolean))];
+    const nf = f => state.hooks.filter(h => (f === 'all' || h.hookFormat === f) && (state.cat === 'All' || h.category === state.cat)).length;
     return `
       <div class="toolbar">
         <input class="search" id="hook-q" type="search" placeholder="Search hooks, sources, evidence…" value="${esc(state.q)}" aria-label="Search hooks">
@@ -515,6 +520,10 @@ button.step:disabled { opacity: 0.35; cursor: default; }
           <option value="all">All platforms (${np('all')})</option>
           ${plats.map(p => `<option value="${esc(p)}" ${state.platform === p ? 'selected' : ''}>${esc(p)} (${np(p)})</option>`).join('')}
         </select>
+        ${fmts.length ? `<select class="status-filter" id="hook-format" aria-label="Filter by hook format">
+          <option value="all">All hook formats (${nf('all')})</option>
+          ${fmts.map(f => `<option value="${esc(f)}" ${state.hookFormat === f ? 'selected' : ''}>${esc(f)} (${nf(f)})</option>`).join('')}
+        </select>` : ''}
         <select class="status-filter" id="hook-status" aria-label="Filter by status">
           <option value="all">All statuses</option>
           ${STATUSES.map(s => `<option value="${s}" ${state.status === s ? 'selected' : ''}>${s}</option>`).join('')}
@@ -543,7 +552,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     return `<article class="hook" id="hook-${esc(h.id)}">
       ${shot}
       ${pair}
-      <div class="side"><span class="pill ${esc(h.status)}">${esc(h.status)}</span><span class="cat">${esc(h.category)}</span><span class="ref-id">${esc(platOf(h))} · ${esc(h.ref || h.id)}</span>${addToIdeasBtn(h)}</div>
+      <div class="side"><span class="pill ${esc(h.status)}">${esc(h.status)}</span><span class="cat">${esc(h.category)}</span>${h.hookFormat ? `<button type="button" class="cat fmt" data-hook-format="${esc(h.hookFormat)}" title="Show only this hook format">${esc(h.hookFormat)}</button>` : ''}<span class="ref-id">${esc(platOf(h))} · ${esc(h.ref || h.id)}</span>${addToIdeasBtn(h)}</div>
       ${based ? `<div class="adapted">Based on: <i>${esc(based.text)}</i></div>` : ''}
       ${compareBlock(h)}
       ${h.evidence ? `<div class="evidence">${esc(h.evidence)}</div>` : ''}
@@ -1091,6 +1100,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   view.addEventListener('change', async e => {
     const t = e.target;
     if (t.id === 'hook-status') { state.status = t.value; render(); }
+    if (t.id === 'hook-format') { state.hookFormat = t.value; render(); $('#hook-format')?.focus(); }
     if (t.id === 'an-sort') { state.rankBy = t.value; render(); $('#an-sort')?.focus(); }
     if (t.id === 'an-format') { state.anFormat = t.value; render(); $('#an-format')?.focus(); }
     if (t.id === 'an-hook') { state.anHook = t.value; render(); $('#an-hook')?.focus(); }
@@ -1110,6 +1120,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   view.addEventListener('click', async e => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.dataset.cat) { state.cat = t.dataset.cat; render(); }
+    else if (t.dataset.hookFormat) { state.hookFormat = t.dataset.hookFormat; render(); }
     else if (t.id === 'hook-add') { state.adding = true; render(); $('#nh-text')?.focus(); }
     else if (t.id === 'add-cancel') { state.adding = false; render(); }
     else if (t.dataset.gotoHook) { state.view = 'hooks'; state.cat = 'All'; state.status = 'all'; state.platform = 'all'; state.q = t.dataset.gotoHook; render(); }
