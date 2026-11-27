@@ -362,9 +362,13 @@ error, src, poster, seconds, slides, doneAt }`.
    <folder>/video.mp4 <secs> <fade>`: `<secs>` = the seconds per slide chosen
    on the card (`video.wantSecs`, from the dropdown: 1, 1.5, 2, 2.5 or 3;
    2.5 if missing); `<fade>` = 0.5 s, or 0.3 s when a slide is under 1.5 s. It draws each slide's text exactly as the page does (same CSS),
-   joins the frames with ffmpeg's `fade` crossfade, writes H.264 1080×1920 30 fps
-   with a silent audio track and **all metadata stripped**, plus a 270×480 poster
-   `video.jpg`. Look at a few frames before publishing.
+   joins the frames with ffmpeg's `fade` crossfade, writes a phone-style MP4
+   (H.264 High@4.1 1080×1920 30 fps, a keyframe every second, Rec.709 tags, mp42
+   with a creation date, 48 kHz AAC with an inaudible noise floor; all other
+   metadata stripped), plus a 270×480 poster `video.jpg`. Look at a few frames
+   before publishing. (27 Nov: the first video, encoded with one keyframe, no
+   colour tags and an empty 2 kbps audio track, never left Postiz's queue for
+   TikTok; these settings replace it.)
 4. Publish it with the page as `vid/<post id>-vN.mp4` and `vid/<post id>-vN.jpg`
    (new N each time; delete the previous version's files to stay under the
    512-file limit), then write `video: { status: "done", src, poster, seconds,

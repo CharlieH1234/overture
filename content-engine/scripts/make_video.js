@@ -9,7 +9,8 @@
 // Each slide is drawn with its text exactly as the engine page draws it (the .sl/.ov CSS below is a copy of
 // index.html's; keep the two in step), screenshotted at 1080x1920 with Playwright, then ffmpeg joins the frames
 // with a cross-dissolve ("fade" xfade). Defaults: 2.5 s of each slide on screen + a 0.5 s dissolve.
-// Output: H.264 (yuv420p, 30 fps, faststart) with a silent AAC track, all metadata stripped (-map_metadata -1).
+// Output: H.264 High@4.1 (yuv420p, 30 fps, keyframe every second, Rec.709, faststart) with a near-silent 48 kHz AAC track (inaudible noise, so the audio stream is a normal one, not a 2 kbps empty one);
+// metadata stripped except a creation date.
 // Also writes <out>.jpg (first frame, 270x480) for the page's poster image.
 const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
@@ -64,16 +65,24 @@ function overlay(o) {
   const hold = per + fade, args = ['-y', '-v', 'error'];
   frames.forEach(fr => args.push('-loop', '1', '-t', String(hold), '-framerate', '30', '-i', fr));
   const total = frames.length * per + fade;
-  args.push('-f', 'lavfi', '-t', String(total), '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100');
+  args.push('-f', 'lavfi', '-t', String(total), '-i', 'anoisesrc=color=pink:amplitude=0.0003:sample_rate=48000,aformat=channel_layouts=stereo');
   let chain = frames.map((_, i) => `[${i}:v]scale=1080:1920,setsar=1,format=yuv420p,fps=30[v${i}]`).join(';');
   let last = 'v0';
   for (let k = 1; k < frames.length; k++) {
     chain += `;[${last}][v${k}]xfade=transition=fade:duration=${fade}:offset=${(k * per).toFixed(3)}[x${k}]`;
     last = `x${k}`;
   }
+  // Encoded like a phone video so TikTok's checks accept it: H.264 High@4.1, a keyframe every second (still
+  // slides otherwise give one keyframe for the whole clip), Rec.709 colour tags, 48 kHz stereo AAC, an mp42
+  // container with a creation date, faststart. All other metadata (encoder tags etc.) is stripped.
   args.push('-filter_complex', chain, '-map', `[${last}]`, '-map', `${frames.length}:a`,
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', '30',
-    '-c:a', 'aac', '-b:a', '96k', '-shortest', '-movflags', '+faststart', '-map_metadata', '-1', '-fflags', '+bitexact', out);
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-maxrate', '8M', '-bufsize', '16M',
+    '-profile:v', 'high', '-level:v', '4.1', '-pix_fmt', 'yuv420p', '-r', '30',
+    '-g', '30', '-keyint_min', '30', '-sc_threshold', '0', '-bf', '2',
+    '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
+    '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-ac', '2', '-shortest',
+    '-map_metadata', '-1', '-map_chapters', '-1', '-metadata', `creation_time=${new Date().toISOString()}`,
+    '-brand', 'mp42', '-movflags', '+faststart', out);
   execFileSync('ffmpeg', args, { stdio: 'inherit' });
   execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', frames[0], '-vf', 'scale=270:480', '-q:v', '4', out.replace(/\.mp4$/, '') + '.jpg']);
   fs.rmSync(work, { recursive: true, force: true });
