@@ -359,15 +359,16 @@ error, src, poster, seconds, slides, doneAt }`.
 2. Put the post's current slides (`img/<…>.jpg`, full size, in order) in a
    folder as `slide1.jpg…`, and the post's `overlays` in `post.json`.
 3. Run `node content-engine/scripts/make_video.js <post.json> <folder>
-   <folder>/video.mp4` (defaults: 2.5 s per slide, 0.5 s dissolve between
-   slides). It draws each slide's text exactly as the page does (same CSS),
+   <folder>/video.mp4 <secs> <fade>`: `<secs>` = the seconds per slide chosen
+   on the card (`video.wantSecs`, from the dropdown: 1, 1.5, 2, 2.5 or 3;
+   2.5 if missing); `<fade>` = 0.5 s, or 0.3 s when a slide is under 1.5 s. It draws each slide's text exactly as the page does (same CSS),
    joins the frames with ffmpeg's `fade` crossfade, writes H.264 1080×1920 30 fps
    with a silent audio track and **all metadata stripped**, plus a 270×480 poster
    `video.jpg`. Look at a few frames before publishing.
 4. Publish it with the page as `vid/<post id>-vN.mp4` and `vid/<post id>-vN.jpg`
    (new N each time; delete the previous version's files to stay under the
    512-file limit), then write `video: { status: "done", src, poster, seconds,
-   slides, doneAt }`. Keep `requestedAt`.
+   slides, perSlide, doneAt }` (`perSlide` = the seconds per slide used). Keep `requestedAt`.
 5. Reply in the thread: length, number of slides, that "Post as video" is on so
    Approve 2 will send the video, and that it can be turned off to send photos.
 

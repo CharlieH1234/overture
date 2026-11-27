@@ -185,6 +185,8 @@ select.status-filter { padding: 9px 10px; border: 1px solid var(--line); border-
 .vid video { width: 100%; max-width: 220px; aspect-ratio: 9 / 16; border-radius: 8px; background: #000; display: block; }
 .vid-meta { font: 12px var(--mono); color: var(--muted); }
 .vid-use { font-size: 13px; display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.vid-secs { font-size: 13px; display: flex; gap: 6px; align-items: center; color: var(--muted); }
+.vid-secs select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
 .vid .rstate { text-align: left; }
 @media (max-width: 760px) {
   .card.review .media-col { grid-column: 2; grid-row: 1; min-width: 0; }
@@ -893,14 +895,18 @@ button.step:disabled { opacity: 0.35; cursor: default; }
   // Once it's made, "Post as video" (on by default) makes Approve 2 send the video instead of the photos.
   const videoReady = p => p.video?.status === 'done' && !!p.video.src;
   const postsVideo = p => videoReady(p) && p.postAs !== 'photos';
+  // Seconds each slide stays on screen (chosen above Create / Remake video; 2.5 by default)
+  const VIDEO_SECS = [1, 1.5, 2, 2.5, 3];
+  const secsOf = p => VIDEO_SECS.includes(Number(p.videoSecs)) ? Number(p.videoSecs) : 2.5;
   function videoBox(p) {
     if (!p.slides?.length) return '';
     const v = p.video, busy = isBusy(v), stale = isStale(v), ready = videoReady(p);
     const note = !v ? '' : stale ? STALE_NOTE : v.status === 'queued' ? 'Waiting for Claude…' : v.status === 'working' ? (v.detail || 'Claude is making the video…') : v.status === 'error' ? (v.error || 'Failed') : '';
     return `<div class="vid">
       ${ready ? `<video src="${esc(v.src)}"${v.poster ? ` poster="${esc(v.poster)}"` : ''} controls playsinline preload="none" aria-label="Slideshow video of ${esc(p.ref || '')}"></video>
-        <div class="vid-meta">${v.seconds ? `${esc(v.seconds)} s · ` : ''}${esc(v.slides || p.slides.length)} slides · dissolve</div>
+        <div class="vid-meta">${v.seconds ? `${esc(v.seconds)} s · ` : ''}${esc(v.slides || p.slides.length)} slides${v.perSlide ? ` · ${esc(v.perSlide)} s each` : ''} · dissolve</div>
         <label class="vid-use"><input type="checkbox" data-post-as="${esc(p.id)}" ${p.postAs !== 'photos' ? 'checked' : ''} ${state.canWrite ? '' : 'disabled'}> Post as video</label>` : ''}
+      <label class="vid-secs">Each slide <select data-video-secs="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${VIDEO_SECS.map(n => `<option value="${n}" ${n === secsOf(p) ? 'selected' : ''}>${n} sec</option>`).join('')}</select></label>
       <button class="btn" type="button" data-make-video="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Making video…' : ready ? 'Remake video' : 'Create video'}</button>
       ${note ? `<span class="rstate ${v.status === 'error' || stale ? 'bad' : ''}">${esc(note)}</span>` : ''}
     </div>`;
@@ -1093,6 +1099,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     if (t.dataset.editTitle) await patchPost(t.dataset.editTitle, { title: t.value.trim() });
     if (t.dataset.editWhen) await patchPost(t.dataset.editWhen, { scheduleAt: t.value });
     if (t.dataset.postAs) await patchPost(t.dataset.postAs, { postAs: t.checked ? 'video' : 'photos' });
+    if (t.dataset.videoSecs) await patchPost(t.dataset.videoSecs, { videoSecs: Number(t.value) });
   });
   view.addEventListener('keydown', async e => {
     const t = e.target; if (!t.dataset?.editInput) return;
@@ -1167,8 +1174,9 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     else if (t.dataset.addNew) await addPlanHookToLibrary(t.dataset.addNew);
     else if (t.dataset.makeVideo) {
       const p = state.posts.find(x => x.id === t.dataset.makeVideo);
-      const pinged = pingClaude(t, `Overture engine request: create the video of ${p.ref} (post ${p.id}): the slides with their text, a dissolve between slides, about 2.5 s each. Follow the Overture processing-runbook.md (Create video).`);
-      await patchPost(p.id, { video: { ...(p.video || {}), status: 'queued', requestedAt: new Date().toISOString(), error: null } });
+      const secs = secsOf(p);
+      const pinged = pingClaude(t, `Overture engine request: ${videoReady(p) ? 'remake' : 'create'} the video of ${p.ref} (post ${p.id}): the slides with their text, a dissolve between slides, ${secs} s per slide. Follow the Overture processing-runbook.md (Create video).`);
+      await patchPost(p.id, { video: { ...(p.video || {}), status: 'queued', requestedAt: new Date().toISOString(), error: null, wantSecs: secs } });
       toast((await pinged) ? 'Queued: Claude will make the video' : 'Queued. Claude was not notified automatically, so tell Claude "video ' + p.ref + '"');
     }
     else if (t.dataset.approve2) {
