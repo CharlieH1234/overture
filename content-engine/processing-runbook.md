@@ -382,12 +382,24 @@ with a plain `schedule.error` and stop.
    - `integrationId`: the channel above; `isPremium: false`; `shortLink: false`;
      `type: "schedule"`; `date`: `schedule.at` (UTC).
    - `postsAndComments`: one item, `attachments` = the uploaded paths in slide
-     order, `content` = **the caption only** (ending with the tagline &
-     hashtags), each line wrapped in `<p>…</p>` (blank lines become `<p></p>`).
-     Escape `&` as `&amp;` in the HTML. It becomes the TikTok draft's
-     description as it should be published, so nothing needs replacing.
-     (Changed 27 Nov: the description used to also carry the slide text and
-     title, which the operator had to copy out and then delete.)
+     order, `content` = the slide text, then the caption, with **no labels and
+     no title** (Charlie's format, 27 Nov):
+     ```
+     <slide 1 text, one line per line break>
+
+     <slide 2 text>
+
+     <slide 3 text>
+
+
+     <the caption, ending with the tagline & hashtags>
+     ```
+     One blank line between slides, two blank lines between the last slide's
+     text and the caption. Never add "SLIDE TEXT TO ADD:", "Slide 1:",
+     "TITLE:" or "CAPTION:", and never repeat the title in the body: the title
+     only goes in `settings.title`. Slide text comes from `overlays[].text`
+     (blank lines inside a slide's text are kept). Each line is wrapped in
+     `<p>…</p>`, blank lines become `<p></p>`, and `&` is escaped as `&amp;`.
    - `settings`: `title` = the post's `title`, `content_posting_method: "UPLOAD"`,
      and the required fields `privacy_level: "SELF_ONLY"`, `duet: false`,
      `stitch: false`, `comment: true`, `autoAddMusic: "no"`,
@@ -405,9 +417,10 @@ with a plain `schedule.error` and stop.
    operator can long-press → Copy → paste it onto that slide in TikTok. Write
    `schedule.step: "slide-text"`. If it fails, the post is still scheduled:
    note it in `schedule.detail` and don't set `error`.
-   The reply then says: slide text is in Telegram (one message per slide), the
-   caption is already in the draft; add the text, pick the sound, switch on the
-   AI-generated label, publish.
+   The reply then says: the slide text is at the top of the draft's description
+   (and in Telegram, one message per slide); paste it onto the slides, delete it
+   from the description so only the caption is left, pick the sound, switch on
+   the AI-generated label, publish.
 
 **Why the slide text isn't added automatically:** TikTok's posting API (which
 Postiz uses) takes only the photos, a title and a description for a photo post;

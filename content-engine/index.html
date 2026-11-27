@@ -899,7 +899,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <div class="schedule-row">
           <div class="field"><label for="w-${esc(p.id)}">Send at (your local time)</label><input type="datetime-local" id="w-${esc(p.id)}" data-edit-when="${esc(p.id)}" value="${esc(at)}"></div>
         </div>
-        <div class="note" style="font-size:12px;color:var(--muted)">Approve 2 sends the text-free photos through Telegram to compress them, uploads them to Postiz and schedules the post at this time on the TikTok channel you pick${CHANNELS.length ? ': ' + esc(CHANNELS.map(c => c.name).join(' or ')) : ' (no Overture channel is set up yet)'}. Progress shows in the Scheduled tab. Postiz puts the photos in your TikTok inbox as a draft with the caption already in it; each slide's text comes to Telegram as one message per slide (also listed above) to paste onto the slides, then add a sound and publish.</div>
+        <div class="note" style="font-size:12px;color:var(--muted)">Approve 2 sends the text-free photos through Telegram to compress them, uploads them to Postiz and schedules the post at this time on the TikTok channel you pick${CHANNELS.length ? ': ' + esc(CHANNELS.map(c => c.name).join(' or ')) : ' (no Overture channel is set up yet)'}. Progress shows in the Scheduled tab. Postiz puts the photos in your TikTok inbox as a draft whose description starts with each slide's text (no labels), then the caption; paste the slide text onto the slides, delete it from the description, add a sound and publish.</div>
         ${blockers.length ? `<span class="blocker">${esc(blockers.join(' · '))}</span>` : ''}
         ${captionBtn(p)}
         ${res}
