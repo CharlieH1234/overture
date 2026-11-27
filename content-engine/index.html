@@ -169,6 +169,14 @@ select.status-filter { padding: 9px 10px; border: 1px solid var(--line); border-
 }
 
 .card.idea { grid-template-columns: 76px minmax(0, 1fr) auto; }
+/* Review: the text column runs to the card's right edge; the buttons sit in a bar along the bottom */
+.card.review { grid-template-columns: 76px auto minmax(0, 1fr); }
+.card.review .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+@media (max-width: 760px) {
+  .card.review { grid-template-columns: 64px minmax(0, 1fr); }
+  .card.review .actions { justify-content: stretch; }
+  .card.review .actions .btn { flex: 1 1 auto; }
+}
 .pair-blocks { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px; }
 .side-block { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .ours-block { background: var(--accent-soft); }
@@ -884,7 +892,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <div class="schedule-row">
           <div class="field"><label for="w-${esc(p.id)}">Send at (your local time)</label><input type="datetime-local" id="w-${esc(p.id)}" data-edit-when="${esc(p.id)}" value="${esc(at)}"></div>
         </div>
-        <div class="note" style="font-size:12px;color:var(--muted)">Approve 2 sends the text-free photos through Telegram to compress them, uploads them to Postiz and schedules the post at this time on the TikTok channel you pick${CHANNELS.length ? ': ' + esc(CHANNELS.map(c => c.name).join(' or ')) : ' (no Overture channel is set up yet)'}. Progress shows in the Scheduled tab. Postiz puts the photos in your TikTok inbox as a draft, where you add each slide's text (listed above) and a sound, then publish.</div>
+        <div class="note" style="font-size:12px;color:var(--muted)">Approve 2 sends the text-free photos through Telegram to compress them, uploads them to Postiz and schedules the post at this time on the TikTok channel you pick${CHANNELS.length ? ': ' + esc(CHANNELS.map(c => c.name).join(' or ')) : ' (no Overture channel is set up yet)'}. Progress shows in the Scheduled tab. Postiz puts the photos in your TikTok inbox as a draft with the caption already in it; each slide's text comes to Telegram as one message per slide (also listed above) to paste onto the slides, then add a sound and publish.</div>
         ${blockers.length ? `<span class="blocker">${esc(blockers.join(' · '))}</span>` : ''}
         ${captionBtn(p)}
         ${res}
@@ -909,6 +917,8 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <div class="body"><p class="cover">${esc(p.title || p.cover)}</p>
           <div class="sched-state">${esc(when)}</div>
           ${progress({ ...s, _id: p.id })}
+          ${textBox(p)}
+          ${p.caption?.trim() ? `<div class="pin"><div class="pin-h"><span>Caption</span><button type="button" class="btn" data-copy-caption="${esc(p.id)}">Copy caption</button></div></div>` : ''}
         </div>
         <div class="actions"><button class="btn" type="button" data-tt="${esc(p.id)}">Preview on TikTok</button><button class="btn link" type="button" data-unqueue="${esc(p.id)}" ${state.canWrite ? '' : 'disabled'}>Back to review</button><button class="btn primary" type="button" data-posted="${esc(p.id)}" ${state.canWrite ? '' : 'disabled'}>Posted</button></div>
       </article>`;
@@ -1074,6 +1084,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
     }
     else if ('redoCancel' in t.dataset) { const id = state.redo?.id; state.redo = null; render(); if (id) view.querySelector(`[data-redo-open="${CSS.escape(id)}"]`)?.focus(); }
     else if (t.dataset.redoSend) { const p = state.posts.find(x => x.id === t.dataset.redoSend); if (p) await sendRedo(p); }
+    else if (t.dataset.copyCaption) { const p = state.posts.find(x => x.id === t.dataset.copyCaption); toast(await copyText(p.caption) ? 'Caption copied' : 'Could not copy: select the caption and copy it by hand'); }
     else if (t.dataset.copyPin) { const p = state.posts.find(x => x.id === t.dataset.copyPin); toast(await copyText(p.pinterest.join('\n')) ? 'Pinterest search terms copied' : 'Could not copy: select the terms and copy them by hand'); }
     else if (t.dataset.editField) { state.editing = { id: t.dataset.editField, field: t.dataset.field }; render(); const el = view.querySelector('[data-edit-input]'); el?.focus(); el?.setSelectionRange(el.value.length, el.value.length); }
     else if (t.dataset.saveField) await saveField(t.dataset.saveField, t.dataset.field);

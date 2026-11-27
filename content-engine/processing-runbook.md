@@ -91,8 +91,8 @@ graphics.
 - **Imagery:** original or AI-generated only; nothing from films or TV; no real
   named venues. Never generate the app's interface with an image model.
 - **Copy formats, never claims:** a reference's health claims & hashtags don't carry over.
-- **Label AI images:** Postiz's TikTok draft mode can't set the AI-generated
-  label, so tell Charlie to switch it on in TikTok before publishing.
+- **Label AI images:** the TikTok API can't set the AI-generated label on photo
+  posts (in any mode), so tell Charlie to switch it on in TikTok before publishing.
 - **One slideshow per account per day,** never two of the same format on one day.
 - If a format only works by breaking a guardrail, drop the format.
 
@@ -382,29 +382,12 @@ with a plain `schedule.error` and stop.
    - `integrationId`: the channel above; `isPremium: false`; `shortLink: false`;
      `type: "schedule"`; `date`: `schedule.at` (UTC).
    - `postsAndComments`: one item, `attachments` = the uploaded paths in slide
-     order, `content` = all the text the operator needs, in three labelled
-     sections so it can be copied in one go, each line wrapped in `<p>…</p>`
-     (blank lines become `<p></p>`):
-     ```
-     SLIDE TEXT TO ADD:
-     Slide 1:
-     <slide 1 text, one line per line break>
-     Slide 2:
-     <slide 2 text>
-     Slide 3:
-     <slide 3 text>
-
-     TITLE:
-     <the post's title>
-
-     CAPTION:
-     <the post's caption, ending with the tagline & hashtags>
-     ```
-     Slide text comes from `overlays[].text` (empty lines inside a slide's text
-     are kept). Escape `&` as `&amp;` in the HTML.
-     This whole block becomes the TikTok draft's description, so the operator
-     copies the slide text out, then replaces the description with the CAPTION
-     section before publishing.
+     order, `content` = **the caption only** (ending with the tagline &
+     hashtags), each line wrapped in `<p>…</p>` (blank lines become `<p></p>`).
+     Escape `&` as `&amp;` in the HTML. It becomes the TikTok draft's
+     description as it should be published, so nothing needs replacing.
+     (Changed 27 Nov: the description used to also carry the slide text and
+     title, which the operator had to copy out and then delete.)
    - `settings`: `title` = the post's `title`, `content_posting_method: "UPLOAD"`,
      and the required fields `privacy_level: "SELF_ONLY"`, `duet: false`,
      `stitch: false`, `comment: true`, `autoAddMusic: "no"`,
@@ -415,6 +398,22 @@ with a plain `schedule.error` and stop.
    TikTok discards it. Never use DIRECT_POST unless the operator asks.
    Then write `schedule.status: "sent"`, `postizId`, `previewUrl` (from the
    tool's result), `sentAt`, and `step: "schedule"`.
+5. **slide text**: run `python3 -I content-engine/scripts/telegram_slide_text.py
+   <folder>/post.json`, where post.json is `{ref, title, scheduleAt,
+   overlays:[{text}]}`. It sends a header (ref, send time, title), then each
+   slide's text as its own Telegram message with nothing else in it, so the
+   operator can long-press → Copy → paste it onto that slide in TikTok. Write
+   `schedule.step: "slide-text"`. If it fails, the post is still scheduled:
+   note it in `schedule.detail` and don't set `error`.
+   The reply then says: slide text is in Telegram (one message per slide), the
+   caption is already in the draft; add the text, pick the sound, switch on the
+   AI-generated label, publish.
+
+**Why the slide text isn't added automatically:** TikTok's posting API (which
+Postiz uses) takes only the photos, a title and a description for a photo post;
+it has no field for TikTok's own on-screen text, so that's added in the app. The
+API also can't set the AI-generated label on photo posts, so that's always
+switched on by hand. Never burn the slide text into the images instead.
 
 ## Analysis (TikTok stats & ranking)
 
