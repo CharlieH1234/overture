@@ -390,8 +390,12 @@ video with "Post as video" on), the steps change:
 2. **download**: check `video_tg.mp4` plays (`ffprobe`), 1080×1920, no tags.
 3. **upload**: `python3 -I content-engine/scripts/postiz_upload.py <folder> --video`.
 4. **schedule**: as for photos, with the one video path as the attachment and
-   `content` = the caption only (the slide text is in the video). Note: in
-   UPLOAD mode TikTok drops a video draft's description, so:
+   `content` = the caption only (the slide text is in the video). In UPLOAD
+   mode TikTok drops a video draft's caption & hashtags; there is no other field
+   for them (confirmed 27 Nov from Postiz's TikTok Business rules: only photo
+   drafts keep the title & text). Only DIRECT_POST carries a video's caption,
+   and that publishes publicly with no review & no "only me" option for video,
+   so videos stay drafts (Charlie had no preference; drafts kept). So:
 5. **caption to Telegram**: run `telegram_slide_text.py` with
    `{ref, title, scheduleAt, caption, video: true}`; it sends the header and the
    caption to paste into the draft.

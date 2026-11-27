@@ -965,8 +965,8 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         <div class="body"><p class="cover">${esc(p.title || p.cover)}</p>
           <div class="sched-state">${esc(when)}</div>
           ${progress({ ...s, _id: p.id })}
-          ${textBox(p)}
-          ${p.caption?.trim() ? `<div class="pin"><div class="pin-h"><span>Caption</span><button type="button" class="btn" data-copy-caption="${esc(p.id)}">Copy caption</button></div></div>` : ''}
+          ${p.schedule?.media === 'video' ? '' : textBox(p)}
+          ${p.caption?.trim() ? `<div class="pin"><div class="pin-h"><span>${p.schedule?.media === 'video' ? 'Caption: paste it into the TikTok draft (TikTok drops a video draft\'s caption & hashtags; it\'s also in Telegram)' : 'Caption'}</span><button type="button" class="btn" data-copy-caption="${esc(p.id)}">Copy caption</button></div></div>` : ''}
         </div>
         <div class="actions"><button class="btn" type="button" data-tt="${esc(p.id)}">Preview on TikTok</button><button class="btn link" type="button" data-unqueue="${esc(p.id)}" ${state.canWrite ? '' : 'disabled'}>Back to review</button><button class="btn primary" type="button" data-posted="${esc(p.id)}" ${state.canWrite ? '' : 'disabled'}>Posted</button></div>
       </article>`;
