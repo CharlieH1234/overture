@@ -168,7 +168,14 @@ select.status-filter { padding: 9px 10px; border: 1px solid var(--line); border-
   .card .actions { grid-column: 1 / -1; justify-items: stretch; }
 }
 
-.card.idea { grid-template-columns: 76px minmax(0, 1fr) auto; }
+/* Ideas: original + proposal run to the card's right edge; all buttons sit in a bar along the bottom */
+.card.idea { grid-template-columns: 76px minmax(0, 1fr); }
+.card.idea .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: flex-start; gap: 8px 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.act-group { display: grid; gap: 4px; justify-items: center; text-align: center; max-width: 260px; }
+.act-group .rstate, .act-group .rdir { text-align: center; }
+@media (max-width: 560px) { .card.idea .side-row { flex-wrap: wrap; } .card.idea .side-text { flex: 1 1 100%; } }
+.card.idea .side-row > .thumb, .card.idea .side-row .thumbs .thumb:first-child, .card.idea .thumb.big { width: 168px; }
+.card.idea .side-row .thumbs .thumb:not(:first-child) { width: 56px; }
 /* Review: the text column runs to the card's right edge; the buttons sit in a bar along the bottom */
 .card.review { grid-template-columns: 76px auto minmax(0, 1fr); }
 .card.review .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
@@ -234,7 +241,7 @@ button.step:disabled { opacity: 0.35; cursor: default; }
 .mini { display: grid; grid-template-columns: repeat(5, auto); gap: 0 10px; margin: 0; font-size: 11px; }
 .mini dt { color: var(--muted); grid-row: 1; }
 .mini dd { margin: 0; grid-row: 2; font: 500 13px var(--mono); font-variant-numeric: tabular-nums; }
-@media (max-width: 760px) { .card.idea { grid-template-columns: minmax(0, 1fr); } .pair-blocks { grid-template-columns: minmax(0, 1fr); } .card.idea .actions { justify-items: stretch; } }
+@media (max-width: 760px) { .card.idea { grid-template-columns: minmax(0, 1fr); } .pair-blocks { grid-template-columns: minmax(0, 1fr); } .card.idea .actions { justify-content: stretch; } .card.idea .actions > .btn, .card.idea .act-group { flex: 1 1 auto; } .act-group { justify-items: stretch; max-width: none; } .card.idea .side-row > .thumb, .card.idea .side-row .thumbs .thumb:first-child, .card.idea .thumb.big { width: 120px; } .card.idea .side-row .thumbs .thumb:not(:first-child) { width: 44px; } }
 .review .body { gap: 10px; }
 .review textarea.caption { min-height: 260px; font: 13px/1.55 var(--sans); }
 .review .charcount { font: 12px var(--mono); color: var(--muted); text-align: right; }
@@ -769,20 +776,20 @@ button.step:disabled { opacity: 0.35; cursor: default; }
         </section>
       </div>
       <div class="actions">
-        <button class="btn primary" type="button" data-approve1="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'}>Approve 1</button>
-        <button class="btn danger${state.rejectArm === p.id ? ' armed' : ''}" type="button" data-reject="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'} title="Removes this post from the week plan. Its hook stays in the library.">${state.rejectArm === p.id ? 'Confirm reject' : 'Reject'}</button>
         ${['hook', 'slides', 'caption'].map(kind => {
           const r = p.reimagine?.[kind];
           const busy = isBusy(r), stale = isStale(r);
-          return `<button class="btn" type="button" data-reimagine="${kind}" data-id="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Reimagining…' : kind === 'hook' ? 'Reimagine hook' : kind === 'slides' ? 'Reimagine slides' : 'Reimagine caption'}</button>
+          return `<div class="act-group"><button class="btn" type="button" data-reimagine="${kind}" data-id="${esc(p.id)}" ${state.canWrite && !busy ? '' : 'disabled'}>${busy ? 'Reimagining…' : kind === 'hook' ? 'Reimagine hook' : kind === 'slides' ? 'Reimagine slides' : 'Reimagine caption'}</button>
             ${r ? `<span class="rstate ${r.status === 'error' || stale ? 'bad' : r.status === 'done' ? 'good' : ''}">${esc(
               stale ? STALE_NOTE
               : r.status === 'queued' ? 'Waiting for Claude…'
               : r.status === 'working' ? (r.detail || 'Claude is working on it…')
               : r.status === 'error' ? (r.error || 'Failed')
-              : kind === 'hook' ? 'Overture hook ready' : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}${r?.direction ? `<span class="rdir">Your edits: “${esc(r.direction)}”</span>` : ''}${kind === 'slides' ? promptLine(p) : ''}`;
+              : kind === 'hook' ? 'Overture hook ready' : kind === 'slides' ? 'New composition ready' : 'New angle ready')}</span>` : ''}${r?.direction ? `<span class="rdir">Your edits: “${esc(r.direction)}”</span>` : ''}${kind === 'slides' ? promptLine(p) : ''}</div>`;
         }).join('')}
         <button class="btn" type="button" data-redo-open="${esc(p.id)}" aria-expanded="${state.redo?.id === p.id}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'}>Reimagine with edits</button>
+        <button class="btn danger${state.rejectArm === p.id ? ' armed' : ''}" type="button" data-reject="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'} title="Removes this post from the week plan. Its hook stays in the library.">${state.rejectArm === p.id ? 'Confirm reject' : 'Reject'}</button>
+        <button class="btn primary" type="button" data-approve1="${esc(p.id)}" ${state.canWrite && !state.busy[p.id] ? '' : 'disabled'}>Approve 1</button>
       </div>
       ${state.redo?.id === p.id ? redoBox(p) : ''}
     </article>`;
