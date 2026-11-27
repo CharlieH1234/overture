@@ -361,7 +361,8 @@ error, src, poster, seconds, slides, doneAt }`.
 3. Run `node content-engine/scripts/make_video.js <post.json> <folder>
    <folder>/video.mp4 <secs> <fade>`: `<secs>` = the seconds per slide chosen
    on the card (`video.wantSecs`, from the dropdown: 1, 1.5, 2, 2.5 or 3;
-   2.5 if missing); `<fade>` = 0.5 s, or 0.3 s when a slide is under 1.5 s. It draws each slide's text exactly as the page does (same CSS),
+   2.5 if missing); `<fade>` = 0.5 s, or 0.3 s when a slide is under 1.5 s. It draws each slide's text in the page's position and size, but
+   always white with a black outline on every slide (Charlie, 27 Nov),
    joins the frames with ffmpeg's `fade` crossfade, writes a phone-style MP4
    (H.264 High@4.1 1080×1920 30 fps, a keyframe every second, Rec.709 tags, mp42
    with a creation date, 48 kHz AAC with an inaudible noise floor; all other

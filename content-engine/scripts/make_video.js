@@ -6,8 +6,8 @@
 // post.json: { "overlays": [{ "text", "style", "y", "size", "width", "lineHeight", "card" }, ...] }  (the post doc's overlays)
 // slides dir: slide1.jpg, slide2.jpg, ... (the text-free 1080x1920 slides, in order)
 //
-// Each slide is drawn with its text exactly as the engine page draws it (the .sl/.ov CSS below is a copy of
-// index.html's; keep the two in step), screenshotted at 1080x1920 with Playwright, then ffmpeg joins the frames
+// Each slide is drawn with its text in the engine page's position & size (the .sl/.ov CSS below is a copy of
+// index.html's; keep the two in step), but always in the white-with-black-outline style, screenshotted at 1080x1920 with Playwright, then ffmpeg joins the frames
 // with a cross-dissolve ("fade" xfade). Defaults: 2.5 s of each slide on screen + a 0.5 s dissolve.
 // Output: H.264 High@4.1 (yuv420p, 30 fps, keyframe every second, Rec.709, faststart) with a near-silent 48 kHz AAC track (inaudible noise, so the audio stream is a normal one, not a 2 kbps empty one);
 // metadata stripped except a creation date.
@@ -33,7 +33,8 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 
 function overlay(o) {
   if (!o) return '';
-  const st = OV_WIDTH[o.style] ? o.style : 'outline';
+  // Videos: every slide's text is white with a black outline (Charlie, 27 Nov), whatever style the slide uses on the page
+  const st = 'outline';
   const text = o.text ? `<div class="ov ${st}" style="top:${(o.y ?? 0.4) * 100}%;width:${(o.width || OV_WIDTH[st]) * 100}%;font-size:${(o.size || 0.065) * 100}cqw;line-height:${o.lineHeight || 1.25}">${esc(o.text)}</div>` : '';
   const card = o.card ? `<div class="ov-card" style="top:${o.card.top * 100}%">${esc(o.card.title || '')}${o.card.body ? `<div class="b">${esc(o.card.body)}</div>` : ''}</div>` : '';
   return card + text;
