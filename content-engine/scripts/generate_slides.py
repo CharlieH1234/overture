@@ -5,7 +5,7 @@ Usage:
   python3 -I generate_slides.py <prompts.json> <out_dir>
 
 prompts.json:
-  {"model": "gpt-image-1.5",
+  {"model": "gpt-image-2.5-flare",
    "base": "shared description used for every slide (person, room, camera, light)",
    "slides": ["slide 1 changes", "slide 2 changes", ...]}
 
@@ -102,7 +102,7 @@ def main():
     prompts = json.load(open(sys.argv[1]))
     out_dir = sys.argv[2]
     os.makedirs(out_dir, exist_ok=True)
-    model = prompts.get('model', 'gpt-image-1.5')
+    model = prompts.get('model', 'gpt-image-2.5-flare')
     with cf.ThreadPoolExecutor(3) as ex:
         size, lb = prompts.get('size', '1024x1536'), bool(prompts.get('letterbox'))
         jobs = [ex.submit(one, model, prompts['base'], i + 1, s, out_dir, size, lb) for i, s in enumerate(prompts['slides'])]
